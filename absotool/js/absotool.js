@@ -90,14 +90,14 @@ function AbsoTool(selector, options) {
 		// 快捷键 [keycode1, keycode2,...]。注意防止按键冲突
 		// 如果觉得设置不合理不顺手，可以先按[Z + H]开启printKeyCode打印出keycode，然后设置你的快捷键
 		funcKeyCode: {
-			init: [90,49]                       // [Z + 1] 初始化。目前只能同时拖动单个元素
+			init: [90,49]                       // [Z + 1] 初始化。拖动单个元素，按ctrl可以多选
 			, stop: [90,192]				    // [Z + `] 停止
 			, printKeyCode: [90,72]				// [Z + H] keyup时打印出keycode
 			
 			, adjustWidthHeight: [90,50]		// [Z + 2] 用wasd或方向键调整宽高
 			, adjustTopLeft: [90,51]			// [Z + 3] 用wasd或方向键调整offset().top和offset().left
 			, adjustZindex: [90,52]	            // [Z + 4] 用wasd或方向键调整z-index
-			, switchStep: [90,81]               // [Z + S] 切换_public.step的值，以上3个功能共用_public.step
+			, switchStep: [90,81]               // [Z + Q] 切换_public.step的值，以上3个功能共用_public.step
 			, showTips: [90,84]                 // [Z + T] 类似F12的inspect，有宽高，top和left，z-index的提示
 
 			, showDisplayNone: [88,49]			// [X + 1] show()那些实例化时display:none的selector，type=hidden可能获取不到
@@ -127,8 +127,8 @@ function AbsoTool(selector, options) {
 			, right: [39,68]                    // 右 或 D
 			, down: [40,83]                     // 下 或 S
 			, left: [37,65]                     // 左 或 A
-			, shift: [16,72]                       // shift
-			, ctrl: [17]                        // ctrl
+			, shift: [16,72]                    // shift
+			, ctrl: [17]                        // ctrl + 左键 = 多选， 然后wasd
 		},
 		
 	}
@@ -232,16 +232,7 @@ function AbsoTool(selector, options) {
 		_public.step = _public.stepArr[_public.stepIndex];
 		_public.addSelector(selector);
 		_private.initFunc();
-		$(document).bind("click", function(e){
-			if(!_private.ifPressedAny(_public.config.keyCode.ctrl)){
-				$("." + _private.rect_class).remove();
-				$("." + _private.line_class).remove();
-				$("." + _private.tips_class).remove();
-				$("." + _private.ctrl_rect_class).remove();
-				$("." + _private.ctrl_class).removeClass(_private.ctrl_class);
-			}
-			
-		})
+		$(document).unbind("click", _private.ctrlControl).bind("click", _private.ctrlControl);
 		// _private.output(_private.selector_arr);
 		_private.output("absotool init done. you can drag now.");
 	}
@@ -254,6 +245,7 @@ function AbsoTool(selector, options) {
 		console.log("absotool stop")
 		_private.unbindSelector();
 		_private.stopAjust();
+		$(document).unbind("click", _private.ctrlControl);
 	}
 
 
@@ -502,6 +494,17 @@ function AbsoTool(selector, options) {
 			// 	$(v).attr("draggable", false).unbind("mousedown", _private.bindDragEvent)
 			// })
 		})
+	}
+
+
+	_private.ctrlControl = function(){
+		if(!_private.ifPressedAny(_public.config.keyCode.ctrl)){
+			$("." + _private.rect_class).remove();
+			$("." + _private.line_class).remove();
+			$("." + _private.tips_class).remove();
+			$("." + _private.ctrl_rect_class).remove();
+			$("." + _private.ctrl_class).removeClass(_private.ctrl_class);
+		}
 	}
 
 	/**
