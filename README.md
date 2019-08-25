@@ -1,7 +1,7 @@
 # absotool
 如果你是做前端的，并且在工作中需要用大量绝对定位display: absolute; 那么我建议花两分钟来了解一下这个小东西。
 
-试下这个demo()
+[试下这个demo](https://wenzhenhao.github.io/absotool/absotool/index.html)
 
 ### 如果你觉得这个小东西还不错的话，可以接着往下看。
 
