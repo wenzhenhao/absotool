@@ -5,94 +5,288 @@
 	<title>AbsoTool brief intro</title>
 </head>
 <style type="text/css">
-	.cls-1, .cls-2, .cls-3, .cls-4 {
+
+	.guide {
+		position: relative;
+		width: 600px;
+		margin-left: 50px;
+		height: 677px;
+		overflow: auto;
+		background-color: beige;
+		padding: 10px;
+	}
+	#bg {
+		position: relative;
+		/*margin: 0 auto;*/
+		width: 400px;
+		height: 400px;
+		border: 1px solid;
+	}
+	li {
+		margin-top: 5px;
+	}
+
+
+
+	.cls {
 		position: absolute;
+		top: 20px;
+		width: 50px;
+		height: 50px;
+		color: white;
 	}
+
 	.cls-1 {
-		top: 10px;
-		left: 10px;
-		width: 60px;
-		height: 30px;
+		margin: 20px;
+		left: 20px;
+		background-color: red;
 	}
+
+	.cls-1.btn-2{
+
+	}
+
 	.cls-2 {
-		top: 60px;
-		left: 60px;
-		width: 60px;
-		height: 40px;
+		left: 120px;
 		background-color: blue;
-	}
-	.cls-3 {
-		top: 130px;
-		left: 130px;
-		width: 70px;
-		height: 70px;
 		display: none;
 	}
-	.cls-4 {
-		top: 240px;
-		left: 240px;
-		width: 80px;
-		height: 80px;
-		/*display: none;*/
+
+	.cls-3 {
+		left: 220px;
+		/*background-color: green;*/
 	}
-	.guide {
-		float: right;
-		width: 800px;
-		height: 500px;
+
+	.cls-4 {
+		width: 40px;
+		height: 40px;
+		left: 320px;
+		background-color: purple;
+	}
+	.aim_area {
+		position: absolute;
+		top: 200px;
+		left: 0;
+		width: 400px;
+		height: 100px;
+		display: flex;
+		/*justify-content: space-around;*/
+		text-align: center;
+		z-index: -1;
+	}
+	.aim_box {
+		width: 60px;
+		height: 60px;
+		border: 2px solid;
+		margin-left: 20px;
+	}
+	.tips{
+		color: #c800ff;
+	}
+	textarea{
+		width: 400px;
+		height: 200px;
+	}
+	.highline{
+		background-color: #aae81f;
 	}
 </style>
 <body>
-	<div class="cls-1">cls-1-1</div>
-	<div class="cls-1">cls-1-2</div>
-	<div class="cls-1">cls-1-3</div>
+<div style="display: flex; justify-content: center; flex-wrap: wrap;">
+	<div>
+		<div id="bg">
+			<div class="cls cls-1">btn1</div>
 
-	<div class="cls-2">cls-2-1</div>
-	<div class="cls-2">cls-2-2</div>
-	<div class="cls-2">cls-2-3</div>
+			<div class="cls cls-2">燈泡</div>
 
-	<div class="cls-3">cls-3-1</div>
-	<div class="cls-3">cls-3-2</div>
-	<div class="cls-3">cls-3-3</div>
+			<div class="cls cls-3">input框</div>
 
-	<div class="cls-4">cls-4</div>
-	<div class="cls-4">cls-4</div>
-	<div class="cls-4">cls-4</div>
+			<div class="cls cls-4">btn2</div>
 
-	<div class="guide">
-		<ul>
-			<li>先按F12并切换到Console</li>
-			<li>按[Z + 1]初始化后，即可拖动除cls-4之外的element。因为.cls-4没有init</li>
-			<li>选中任意element后，可按[WASD]调整属性。默认调开启了adjustWidthHeight [Z + 2]，也就是调宽高。</li>
-			<li>你可以[SHIFT + WASD]来同时调整这一个class的多个元素</li>
-			<li>也可以[CTRL + 左键]来自由选择多个要调整的元素</li>
-			<li>调整过程中可按[Z + Q]切换步长。你可以在配置中设置，默认为[1,100]</li>
-			<li>如果你在wasd过程中觉得那些黑底的提示妨碍到你，可按[Z + T]隐藏。调好之后在[Z + T]或者[C + T]打印出来</li>
-			<li>然后[X + 1]可以show那些display: none的element，你应该可以看见cls-3了。[X + 2]则把它们hide回去</li>
-			<li>[X + 3]则会帮没有底色的element加底色，如果觉得颜色太丑，以后可在配置中设置你喜欢的颜色。[X + 4]取消加上去的底色</li>
-			<li>允许你动态addSelector和removeSelector。你可以试着在Console中运行这段代码<pre>absotool.addSelector(".cls-4");</pre></li>
-			<li>布局好之后可以按[C + 2]打印宽高，[C + 3]打印位置(offset())，[C + 4]打印z-index</li>
-			<li>如果下标不符合你的要求，可以修改配置widthHeightReverse和topLeftReverse来调整</li>
-			<li>也可应按[C + 5]，[C + 6]， [C + 7], [C + 8]分别单独打印宽，高，top，left</li>
-			<li>这些C方法会保存对应的数据到localStorage，所以按[V + 2]、[V + 3]和[V + 4]就可以恢复布局的宽高、位置和z-index</li>
-			<li>如果觉得快捷键设置得不合理不顺手，可按[Z + H]打印keycode，再把keycode修改到配置里</li>
-			<li>以上就是大致的功能，配置内容可查看代码</li>
-		</ul>
+			<div class="aim_area">
+				<div class="aim_box red_box">紅</div>
+				<div class="aim_box blue_box">藍</div>
+				<div class="aim_box green_box">綠</div>
+				<div class="aim_box purple_box">紫</div>
+			</div>
+		</div>
+
+		<div class="text-box" style="margin-top: 50px">
+			<p>css文件</p>
+			<textarea name="" id="" cols="30" rows="10"></textarea>
+		</div>
 	</div>
+	<div class="guide">
+		<div>
+			<h1>指北</h1>
+			<ul>
+				<li>引入js的demo
+
+					<pre>
+// 動態加載
+aLoader = function(callback){
+  var path = "js/";
+  var file = "absotool.js";
+
+  var script = document.createElement("script");
+  script.type = "text/javascript";
+  script.src = path + file;
+  document.getElementsByTagName("head")[0].appendChild(script);
+  script.onload = function(){
+    if(typeof(callback) == "function") callback();
+  }
+}
+
+// 這樣寫的目的
+// 方便在控制臺call
+// 在測試場繞開config
+// 這只是個例子，selector和options可以放在容易修改的地方
+aInit = function(){
+  aLoader(function(){
+    var selector = [
+      ".cls",
+      // ".cls-1",
+      // ".cls-2",
+      // ".cls-3",
+      // "cls-4",
+    ];
+    var options = {};
+    aTool = new AbsoTool(selector, options);
+    aTool.initListen();
+  })
+}
+
+var aTool;	// 一定要留個可以在控制臺訪問的變量
+aInit();
+
+					</pre>
+				</li>
+				<li>你可以按照下面的步驟來熟悉這個工具，<b>慢慢來不要急</b></li>
+				<li>先按F12并切换到Console</li>
+				<li>然後按[Z + 1]，如果看到有打印出"absotool init"，即可拖动</li>
+				<li>目標1：把紅色、紫色矩形分別<span class="highline">拖</span>到對應的方框裏。	提示：<span class="tips">鼠標拖動</span></li>
+				<li>目標2：改變矩形<span class="highline">大小</span>，填滿方框。	提示：<span class="tips">按[Z + 2]，然後按[WASD]可微調大小</span></li>
+				<li>目標3：<span class="highline">對齊</span>邊框。	提示：<span class="tips">按[Z + 3]，然後按[WASD]可微調位置，按[Z + T]可開/關提示</span></li>
+				<li>目標4：<span class="highline">顯示</span>燈泡。	提示：<span class="tips">按[X + 1]</span></li>
+				<li>目標5：<span class="highline">隱藏</span>燈泡。		提示：<span class="tips">按[X + 2]</span></li>
+				<li>目標6：為無底色的"input框"<span class="highline">加底色</span>。 提示：<span class="tips">按[X + 3]</span></li>
+				<li>目標7：<span class="highline">去</span>除已加的<span class="highline">底色</span>。 提示：<span class="tips">按[X + 4]</span></li>
+				<li><b>目標8</b>：把矩形的樣式<span class="highline">"寫"在"css文件"</span>裏。提示：<span class="tips">按[C + 1]，然後粘貼在文本框内</span></li>
+				<h3>很好你做到了，但是要改需求<button id="change1" type="button" onclick="change1()">自覺點一下</button></h3>
+				<li>目標9：把矩形<span class="highline">全部一起</span>移到新位置。	提示：<span class="tips">點擊任意矩形，按一次[Z + Q]切換步長，再按一次[SHIFT + S]</span></li>
+				<h3>可以可以，但是還是要改需求<button id="change2" type="button" onclick="change2()">自覺點一下</button></h3>
+				<li>目標10：把紅色、紫色矩形，<span class="highline">這兩個移</span>到新位置。	提示：<span class="tips">按[CTRL + 左鍵]選中兩個矩形，按一次[Z + Q]切換步長，然後[W]</span></li>
+			</ul>
+		</div>
+
+		<div>
+			<h1 style="color:red;">限制</h1>
+			<ul>
+				<li>请确保实例化前selector是绝对定位，还有记得引入jQuery</li>
+				<!-- <li>不要有其他div包著selector，selector的parent是#bg</li> -->
+			</ul>
+		</div>
+		
+		<div>
+			<h1>修復、完善</h1>
+			<ul>
+				<li>20190929 修復parent的offset不為0或margin不為0，導致調位置出現偏差</li>
+				<li>20190930 C功能會把數據複製到clipboard</li>
+				<li>20190930 新增[C + 1]：獲得樣式。可直接CTRL + V到css文件</li>
+				<li>20191025 <ul>
+						<li>修復parent為相對定位且帶有margin時導致拖動位置不准</li>
+						<li>修復輔助對位的兩條竪綫高度不足的情況</li>
+						<li>新增[V + 1]方法，還原大小，位置 ，z-index</li>
+					</ul>
+				</li>
+				<li>20191026
+					<ul>
+						<li>更新 兩條輔助橫綫的長度 = parent.width()</li>
+						<li>用輔助綫的範圍代替檢查邊界的功能</li>
+						<li>修復 currentTarget打印的位置信息不准</li>
+						<li>修復 parent有boder對target位置的影響</li>
+					</ul>
+				</li>
+			</ul>
+		</div>
+
+	</div>
+
+</div>
+
 </body>
 <!-- jquery -->
-<script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+<script src="https://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
 <script type="text/javascript" src="js/absotool.js"></script>
 <script type="text/javascript">
-	
-	var selector = [
-		".cls-1",
-		".cls-2",
-		".cls-3",
-		// "cls-4",
-	];
-	var options = {};
-	var absotool = new AbsoTool(selector, options);
-	absotool.initListen();
-	
+
+aLoader = function(callback){
+  var path = "js/";
+  var file = "absotool.js";
+
+  var script = document.createElement("script");
+  script.type = "text/javascript";
+  script.src = path + file;
+  document.getElementsByTagName("head")[0].appendChild(script);
+  script.onload = function(){
+    if(typeof(callback) == "function") callback();
+  }
+}
+
+// 這樣寫的目的
+// 方便在控制臺call
+// 在測試場繞開config
+aInit = function(){
+  aLoader(function(){
+    var selector = [
+      ".cls",
+      // ".cls-1",
+      // ".cls-2",
+      // ".cls-3",
+      // "cls-4",
+    ];
+    var options = {
+      bgColors:["green"],
+    };
+    aTool = new AbsoTool(selector, options);
+    aTool.initListen();
+  })
+}
+
+var aTool;	// 一定要留個可以在控制臺訪問的變量
+aInit();
+
+var has_changed1 = false;
+function change1(){
+	if(has_changed1){
+		$("#change1").text("好了別點了");
+		return false;
+	}
+	$(".aim_area").css("top", 300);
+	$("#change1").text("ok");
+	has_changed1 = true;
+}	
+
+var has_changed2 = false;
+function change2(){
+	if(!has_changed1){
+		$("#change2").text("先點上一個↑");
+		return false;
+	}
+	if(has_changed2){
+		$("#change2").text("好了別點了");
+		return false;
+	}
+	$("#change2").text("ok");
+	$(".red_box").css({
+		position: "relative",
+		top: "-5px",
+	});
+	$(".purple_box").css({
+		position: "relative",
+		top: "-5px",
+	});
+	has_changed2 = true;
+}	
 </script>
 </html>
