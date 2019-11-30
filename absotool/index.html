@@ -97,16 +97,16 @@
 		<div id="bg">
 			<div class="cls cls-1">btn1</div>
 
-			<div class="cls cls-2">燈泡</div>
+			<div class="cls cls-2">灯泡</div>
 
 			<div class="cls cls-3">input框</div>
 
 			<div class="cls cls-4">btn2</div>
 
 			<div class="aim_area">
-				<div class="aim_box red_box">紅</div>
-				<div class="aim_box blue_box">藍</div>
-				<div class="aim_box green_box">綠</div>
+				<div class="aim_box red_box">红</div>
+				<div class="aim_box blue_box">蓝</div>
+				<div class="aim_box green_box">绿</div>
 				<div class="aim_box purple_box">紫</div>
 			</div>
 		</div>
@@ -123,7 +123,7 @@
 				<li>引入js的demo
 
 					<pre>
-// 動態加載
+// 动态加载
 aLoader = function(callback){
   var path = "js/";
   var file = "absotool.js";
@@ -137,10 +137,10 @@ aLoader = function(callback){
   }
 }
 
-// 這樣寫的目的
-// 方便在控制臺call
-// 在測試場繞開config
-// 這只是個例子，selector和options可以放在容易修改的地方
+// 这样写的目的
+// 方便在控制台call
+// 在测试场绕开config
+// 这只是个例子，selector和options可以放在容易修改的地方
 aInit = function(){
   aLoader(function(){
     var selector = [
@@ -156,26 +156,26 @@ aInit = function(){
   })
 }
 
-var aTool;	// 一定要留個可以在控制臺訪問的變量
+var aTool;	// 一定要留个可以在控制台访问的变量
 aInit();
 
 					</pre>
 				</li>
-				<li>你可以按照下面的步驟來熟悉這個工具，<b>慢慢來不要急</b></li>
+				<li>你可以按照下面的步骤来熟悉这个工具，<b>慢慢来不要急</b></li>
 				<li>先按F12并切换到Console</li>
-				<li>然後按[Z + 1]，如果看到有打印出"absotool init"，即可拖动</li>
-				<li>目標1：把紅色、紫色矩形分別<span class="highline">拖</span>到對應的方框裏。	提示：<span class="tips">鼠標拖動</span></li>
-				<li>目標2：改變矩形<span class="highline">大小</span>，填滿方框。	提示：<span class="tips">按[Z + 2]，然後按[WASD]可微調大小</span></li>
-				<li>目標3：<span class="highline">對齊</span>邊框。	提示：<span class="tips">按[Z + 3]，然後按[WASD]可微調位置，按[Z + T]可開/關提示</span></li>
-				<li>目標4：<span class="highline">顯示</span>燈泡。	提示：<span class="tips">按[X + 1]</span></li>
-				<li>目標5：<span class="highline">隱藏</span>燈泡。		提示：<span class="tips">按[X + 2]</span></li>
-				<li>目標6：為無底色的"input框"<span class="highline">加底色</span>。 提示：<span class="tips">按[X + 3]</span></li>
-				<li>目標7：<span class="highline">去</span>除已加的<span class="highline">底色</span>。 提示：<span class="tips">按[X + 4]</span></li>
-				<li><b>目標8</b>：把矩形的樣式<span class="highline">"寫"在"css文件"</span>裏。提示：<span class="tips">按[C + 1]，然後粘貼在文本框内</span></li>
-				<h3>很好你做到了，但是要改需求<button id="change1" type="button" onclick="change1()">自覺點一下</button></h3>
-				<li>目標9：把矩形<span class="highline">全部一起</span>移到新位置。	提示：<span class="tips">點擊任意矩形，按一次[Z + Q]切換步長，再按一次[SHIFT + S]</span></li>
-				<h3>可以可以，但是還是要改需求<button id="change2" type="button" onclick="change2()">自覺點一下</button></h3>
-				<li>目標10：把紅色、紫色矩形，<span class="highline">這兩個移</span>到新位置。	提示：<span class="tips">按[CTRL + 左鍵]選中兩個矩形，按一次[Z + Q]切換步長，然後[W]</span></li>
+				<li>然后按[Z + 1]，如果看到有打印出"absotool init"，即可拖动</li>
+				<li>目标1：把红色、紫色矩形分别<span class="highline">拖</span>到对应的方框里。	提示：<span class="tips">鼠标拖动</span></li>
+				<li>目标2：改变矩形<span class="highline">大小</span>，填满方框。	提示：<span class="tips">按[Z + 2]，然后按[WASD]可微调大小</span></li>
+				<li>目标3：<span class="highline">对齐</span>边框。	提示：<span class="tips">按[Z + 3]，然后按[WASD]可微调位置，按[Z + T]可开/关提示</span></li>
+				<li>目标4：<span class="highline">显示</span>灯泡。	提示：<span class="tips">按[X + 1]</span></li>
+				<li>目标5：<span class="highline">隐藏</span>灯泡。		提示：<span class="tips">按[X + 2]</span></li>
+				<li>目标6：为无底色的"input框"<span class="highline">加底色</span>。 提示：<span class="tips">按[X + 3]</span></li>
+				<li>目标7：<span class="highline">去</span>除已加的<span class="highline">底色</span>。 提示：<span class="tips">按[X + 4]</span></li>
+				<li><b>目标8</b>：把矩形的样式<span class="highline">"写"在"css文件"</span>里。提示：<span class="tips">按[C + 1]，然后粘贴在文本框内</span></li>
+				<h3>很好你做到了，但是要改需求<button id="change1" type="button" onclick="change1()">自觉点一下</button></h3>
+				<li>目标9：把矩形<span class="highline">全部一起</span>移到新位置。	提示：<span class="tips">点击任意矩形，按一次[Z + Q]切换步长，再按一次[SHIFT + S]</span></li>
+				<h3>可以可以，但是还是要改需求<button id="change2" type="button" onclick="change2()">自觉点一下</button></h3>
+				<li>目标10：把红色、紫色矩形，<span class="highline">这两个移</span>到新位置。	提示：<span class="tips">按[CTRL + 左键]选中两个矩形，按一次[Z + Q]切换步长，然后[W]</span></li>
 			</ul>
 		</div>
 
@@ -183,28 +183,28 @@ aInit();
 			<h1 style="color:red;">限制</h1>
 			<ul>
 				<li>请确保实例化前selector是绝对定位，还有记得引入jQuery</li>
-				<!-- <li>不要有其他div包著selector，selector的parent是#bg</li> -->
+				<!-- <li>不要有其他div包着selector，selector的parent是#bg</li> -->
 			</ul>
 		</div>
 		
 		<div>
-			<h1>修復、完善</h1>
+			<h1>修复、完善</h1>
 			<ul>
-				<li>20190929 修復parent的offset不為0或margin不為0，導致調位置出現偏差</li>
-				<li>20190930 C功能會把數據複製到clipboard</li>
-				<li>20190930 新增[C + 1]：獲得樣式。可直接CTRL + V到css文件</li>
+				<li>20190929 修复parent的offset不为0或margin不为0，导致调位置出现偏差</li>
+				<li>20190930 C功能会把数据复制到clipboard</li>
+				<li>20190930 新增[C + 1]：获得样式。可直接CTRL + V到css文件</li>
 				<li>20191025 <ul>
-						<li>修復parent為相對定位且帶有margin時導致拖動位置不准</li>
-						<li>修復輔助對位的兩條竪綫高度不足的情況</li>
-						<li>新增[V + 1]方法，還原大小，位置 ，z-index</li>
+						<li>修复parent为相对定位且带有margin时导致拖动位置不准</li>
+						<li>修复辅助对位的两条竖线高度不足的情况</li>
+						<li>新增[V + 1]方法，还原大小，位置 ，z-index</li>
 					</ul>
 				</li>
 				<li>20191026
 					<ul>
-						<li>更新 兩條輔助橫綫的長度 = parent.width()</li>
-						<li>用輔助綫的範圍代替檢查邊界的功能</li>
-						<li>修復 currentTarget打印的位置信息不准</li>
-						<li>修復 parent有boder對target位置的影響</li>
+						<li>更新 两条辅助横线的长度 = parent.width()</li>
+						<li>用辅助线的范围代替检查边界的功能</li>
+						<li>修复 currentTarget打印的位置信息不准</li>
+						<li>修复 parent有boder对target位置的影响</li>
 					</ul>
 				</li>
 			</ul>
@@ -233,9 +233,9 @@ aLoader = function(callback){
   }
 }
 
-// 這樣寫的目的
-// 方便在控制臺call
-// 在測試場繞開config
+// 这样写的目的
+// 方便在控制台call
+// 在测试场绕开config
 aInit = function(){
   aLoader(function(){
     var selector = [
@@ -253,13 +253,13 @@ aInit = function(){
   })
 }
 
-var aTool;	// 一定要留個可以在控制臺訪問的變量
+var aTool;	// 一定要留个可以在控制台访问的变量
 aInit();
 
 var has_changed1 = false;
 function change1(){
 	if(has_changed1){
-		$("#change1").text("好了別點了");
+		$("#change1").text("好了别点了");
 		return false;
 	}
 	$(".aim_area").css("top", 300);
@@ -270,11 +270,11 @@ function change1(){
 var has_changed2 = false;
 function change2(){
 	if(!has_changed1){
-		$("#change2").text("先點上一個↑");
+		$("#change2").text("先点上一个↑");
 		return false;
 	}
 	if(has_changed2){
-		$("#change2").text("好了別點了");
+		$("#change2").text("好了别点了");
 		return false;
 	}
 	$("#change2").text("ok");
