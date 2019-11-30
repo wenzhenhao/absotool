@@ -5,16 +5,17 @@ function AbsoTool(selector, options) {
 	var _private = new Object();
 	// jQuery selector
 	_public.selector;
+	_public.options = {};
 
 	// 类似F12 inspect。用一个带有backgroud-color的与element同宽同高的div盖在上面
-	_public.rect = {
+	_public.options.rect = {
 		backgroundColor: "#0000ff",
 		opacity: 0.2,
 		alwaysTop: true,
 	}
 
 	// 类似F12 inspect。帮助对齐的辅助线
-	_public.line = {
+	_public.options.line = {
 		borderWidth: 1,
 		borderColor: "red",
 		borderStyle: "solid",
@@ -23,12 +24,12 @@ function AbsoTool(selector, options) {
 	}
 
 	// 用wasd或方向键调宽高、offset().top和offset().left、z-index时的步长
-	_public.step;	//init时默认为_public.stepArr[_public.stepIndex]
-	_public.stepArr = [1,100];
-	_public.stepIndex = 0;
+	_public.options.step;	//init时默认为_public.options.stepArr[_public.options.stepIndex]
+	_public.options.stepArr = [1,100];
+	_public.options.stepIndex = 0;
 
 	// 调用addBackgroundColor [X + 3] 时，为没有backgroud-color的selector加backgroud-color
-	_public.bgColors = [
+	_public.options.bgColors = [
 		'aliceblue',
 		'beige',
 		'cadetblue',
@@ -38,7 +39,7 @@ function AbsoTool(selector, options) {
 	];
 
 	// 开启showTips [Z + T] 时，可显示在调element的宽高、offset().top和offset().left、z-index
-	_public.tips = {
+	_public.options.tips = {
 		topLeft:{
 			top: -10,
 			left: 0,
@@ -72,8 +73,11 @@ function AbsoTool(selector, options) {
 	}
 
 	//改变打印的格式
-	_public.widthHeightReverse = false,	// false: [width,height], true: [height, width]
-	_public.topLeftReverse = false,     // false: [top,left], true: [left, top]
+	_public.options.widthHeightReverse = false,	// false: [width,height], true: [height, width]
+	_public.options.topLeftReverse = false,     // false: [top,left], true: [left, top]
+	//拖放结束打印data
+	_public.options.printAfterDrag = true,		// mouseup print data
+	_public.options.boundary = false;			// 邊界
 
 	// 比较重要的配置
 	_public.config = {
@@ -82,8 +86,8 @@ function AbsoTool(selector, options) {
 			printKeyCode: "off",
 			showTips: "on",
 			// 下面这三个只能同一时间开启一个
-			adjustWidthHeight: "on",
-			adjustTopLeft: "off",
+			adjustWidthHeight: "off",
+			adjustTopLeft: "on",
 			adjustZindex: "off",
 		},
 
@@ -97,14 +101,17 @@ function AbsoTool(selector, options) {
 			, adjustWidthHeight: [90,50]		// [Z + 2] 用wasd或方向键调整宽高
 			, adjustTopLeft: [90,51]			// [Z + 3] 用wasd或方向键调整offset().top和offset().left
 			, adjustZindex: [90,52]	            // [Z + 4] 用wasd或方向键调整z-index
-			, switchStep: [90,81]               // [Z + Q] 切换_public.step的值，以上3个功能共用_public.step
+			, switchStep: [90,81]               // [Z + Q] 切换_public.options.step的值，以上3个功能共用_public.options.step
 			, showTips: [90,84]                 // [Z + T] 类似F12的inspect，有宽高，top和left，z-index的提示
 
 			, showDisplayNone: [88,49]			// [X + 1] show()那些实例化时display:none的selector，type=hidden可能获取不到
 			, hideDisplayNone: [88,50]			// [X + 2] hide()[X + 1]
-			, addBackgroundColor: [88,51]       // [X + 3] 为那些实例化时没有bg的selector加_public.bgColors
+			, addBackgroundColor: [88,51]       // [X + 3] 为那些实例化时没有bg的selector加_public.options.bgColors
 			, removeBackgroundColor: [88,52]	// [X + 4] remove[X + 3]
 
+			//  C 方法
+			//  20191025 C方法之後都可以ctrl + v 貼數據
+			, getCss: [67,49]           		// [C + 1] 複製樣式到剪貼板，可按ctrl + v 貼到css文件
 			, getWidthHeight: [67,50]           // [C + 2] 打印selector的宽高，也会返回JSON.stringfy()。打印格式为：[[width,height]]
 			, getTopLeft: [67,51]				// [C + 3] 打印display不为none的selector的offset().top和offset().left，也会返回JSON.stringfy()。打印格式为：[[top,left]]
 			, getZindex: [67,52]                // [C + 4] 打印selector的z-index，也会返回JSON.stringfy()。打印格式为：[z-index]
@@ -116,9 +123,10 @@ function AbsoTool(selector, options) {
 
 			// 调用以get开头的方法，除去getCurrentTarget之外，都会把相应的数据保存在localStorage
 			// 所以在你F5之后可以调用一下方法来还原它们的位置，大小，z-index
-			, setWidthHeight: [86,50]           // 根据localStorage来还原 大小
-			, setTopLeft: [86,51]               // 根据localStorage来还原 位置
-			, setZindex: [86,52]                // 根据localStorage来还原 z-index
+			, setCssRule: [86,49]				// [V + 1] 還原大小，位置，z-index
+			, setWidthHeight: [86,50]           // [V + 2] 根据localStorage来还原 大小
+			, setTopLeft: [86,51]               // [V + 3] 根据localStorage来还原 位置
+			, setZindex: [86,52]                // [V + 4] 根据localStorage来还原 z-index
 
 		},
 		keyCode: {
@@ -137,6 +145,14 @@ function AbsoTool(selector, options) {
 	_private.prefix = "absotool-";
 	_private.selector_arr = [];
 	_private.that;
+
+	_private.container;
+	_private.container_offset;
+	// _private.container_margin;  // margin可在offset中體現出來
+	_private.container_cx;
+	_private.container_cy;
+	_private.container_position;
+
 	_private.w;
 	_private.h;
 
@@ -168,6 +184,7 @@ function AbsoTool(selector, options) {
 		wh: "width_height",
 		tl: "top_left",
 		zIndex: "z-index",
+		css: "css",
 	}
 	// private variable end
 
@@ -190,7 +207,7 @@ function AbsoTool(selector, options) {
 	_public.setOptions = function(options){
 		if(_private.isObj(options)){
 			delete options.selector;
-			_public = _private.extend(_public, options);
+			_public.options = _private.extend(_public.options, options);
 		}
 
 	}
@@ -229,7 +246,7 @@ function AbsoTool(selector, options) {
 	_public.init = function(){
 		_private.output("absotool init start");
 		_public.setOptions(options);
-		_public.step = _public.stepArr[_public.stepIndex];
+		_public.options.step = _public.options.stepArr[_public.options.stepIndex];
 		_public.addSelector(selector);
 		_private.initFunc();
 		$(document).unbind("click", _private.ctrlControl).bind("click", _private.ctrlControl);
@@ -246,6 +263,8 @@ function AbsoTool(selector, options) {
 		_private.unbindSelector();
 		_private.stopAjust();
 		$(document).unbind("click", _private.ctrlControl);
+		_private.working = false;
+
 	}
 
 
@@ -255,8 +274,9 @@ function AbsoTool(selector, options) {
 	 * @return {[type]} [description]
 	 */
 	_public.switchStep = function(){
-		_public.step = _public.stepArr[(++_public.stepIndex) % _public.stepArr.length];
-		_private.output("step is " + _public.step + " now.")
+		_public.options.step = _public.options.stepArr[(++_public.options.stepIndex) % _public.options.stepArr.length];
+		if(_public.options.stepIndex > _public.options.stepArr.length) _public.options.stepIndex = 0;
+		_private.output("step is " + _public.options.step + " now.")
 	}
 
 	/**
@@ -325,6 +345,7 @@ function AbsoTool(selector, options) {
 		$(_private.not_visible).each(function(i, v){
 			$(v).show();
 		})
+		// console.log(_private.not_visible)
 		_private.output("showDisplayNone");
 	}
 
@@ -359,12 +380,63 @@ function AbsoTool(selector, options) {
 	// ---------------- X functions end ------------------------------------------------
 	
 	// ---------------- C functions  ------------------------------------------------
+	
+	/**
+	 * copy css into clipborad
+	 * @return {[type]} [description]
+	 */
+	_public.getCss = function(){
+		var css = {};
+		// show出來才能拿到offset
+		_public.showDisplayNone();
+		$(_private.selector_arr).each(function(i1, v1){
+			$(v1).each(function(i2, v2){
+				var k = '.' + v2.className.split(' ').join('.');
+				var offset = $(v2).offset();
+				var w = $(v2).innerWidth();
+				var h = $(v2).innerHeight();
+				var z = $(v2).css("z-index");
+				if(_private.container_position == "relative"){
+					offset.top -= (_private.container_cy + _private.margin[0]);
+					offset.left -= (_private.container_cx + _private.margin[3]);
+				}
+				css[k] = `{
+	position: absolute;
+	top: ${offset.top}px;
+	left: ${offset.left}px;
+	width: ${w}px;
+	height: ${h}px;
+	z-index: ${z};
+}
+`
+			})
+		})
+		// console.log(css);
+		// console.log(JSON.stringify(css));
+		_private.setData('css', css);
+		_public.hideDisplayNone();
+
+		_private.output('--- copy css into clipboard, you can paste into .css ---');
+		_private.copy2cb(css, 'css')
+		
+
+	}
+
 	/**
 	 * print [[widths,heights]] for you
 	 * @return {[type]} [description]
 	 */
 	_public.getWidthHeight = function(){
-		return _private.getwh();
+		var data = _private.getwh();
+		if(_public.options.widthHeightReverse){
+			var label = 'height & width';
+		}else{
+			var label = 'width & height';
+		}
+		_private.output(data, label);
+		_private.copy2cb(data, 'array');
+		
+
 	}
 
 	/**
@@ -372,7 +444,9 @@ function AbsoTool(selector, options) {
 	 * @return {[type]} [description]
 	 */
 	_public.getWidth = function(){
-		return _private.getwh(0);
+		var data = _private.getwh(0);
+		_private.output(data, 'width');
+		_private.copy2cb(data, 'array');
 	}
 
 	/**
@@ -380,7 +454,9 @@ function AbsoTool(selector, options) {
 	 * @return {[type]} [description]
 	 */
 	_public.getHeight = function(){
-		return _private.getwh(1);
+		var data = _private.getwh(1);
+		_private.output(data, 'height');
+		_private.copy2cb(data, 'array');
 	}
 
 	/**
@@ -388,7 +464,14 @@ function AbsoTool(selector, options) {
 	 * @return {[type]} [description]
 	 */
 	_public.getTopLeft = function(){
-		return _private.gettl();
+		var data = _private.gettl();
+		if(_public.options.topLeftReverse){
+			var label = 'left & top';
+		}else{
+			var label = 'top & left';
+		}
+		_private.output(data, label);
+		_private.copy2cb(data, 'array');
 	}
 
 	/**
@@ -396,7 +479,9 @@ function AbsoTool(selector, options) {
 	 * @return {[type]} [description]
 	 */
 	_public.getTop = function(){
-		return _private.gettl(0);
+		var data = _private.gettl(0);
+		_private.output(data, 'top');
+		_private.copy2cb(data, 'array');
 	}
 
 	/**
@@ -404,7 +489,9 @@ function AbsoTool(selector, options) {
 	 * @return {[type]} [description]
 	 */
 	_public.getLeft = function(){
-		return _private.gettl(1);
+		var data = _private.gettl(1);
+		_private.output(data, 'top');
+		_private.copy2cb(data, 'array');
 	}
 
 
@@ -413,7 +500,9 @@ function AbsoTool(selector, options) {
 	 * @return {[type]} [description]
 	 */
 	_public.getZindex = function(){
-		return _private.getZindex();
+		var data = _private.getZindex();
+		_private.output(data, 'z-index');
+		_private.copy2cb(data, 'array');
 	}
 
 	/**
@@ -423,8 +512,12 @@ function AbsoTool(selector, options) {
 	_public.getCurrentTarget = function(){
 		var obj = {};
 		var offset = $(_private.that).offset()
+		if(_private.container_position == "relative"){
+			offset.top -= (_private.container_cy + _private.margin[0]);
+			offset.left -= (_private.container_cx +  + _private.margin[3]);
+		}
 		obj["top & left"] = [offset.top, offset.left];
-		obj["width & height"] = [$(_private.that).width(), $(_private.that).height()];
+		obj["width & height"] = [$(_private.that).innerWidth(), $(_private.that).innerHeight()];
 		obj["z-index"] = $(_private.that).css("z-index");
 		_private.output(obj, "currentTarget");
 		return JSON.stringify(obj);
@@ -435,19 +528,23 @@ function AbsoTool(selector, options) {
 	/**
 	 * where there is a get, there is a set
 	 */
+	_public.setCssRule = function(){
+		_private.output("setCssRule");
+		_private.setCss(_private.ls.css);
+	}
 	_public.setWidthHeight = function(){
-		_private.setCss(_private.ls.wh, ["width", "height"]);
 		_private.output("setWidthHeight");
+		_private.setCss(_private.ls.wh, ["width", "height"]);
 	}
 
 	_public.setTopLeft = function(){
-		_private.setCss(_private.ls.tl, ["top", "left"]);
 		_private.output("setTopLeft");
+		_private.setCss(_private.ls.tl, ["top", "left"]);
 	}
 
 	_public.setZindex = function(){
-		_private.setCss(_private.ls.zIndex);
 		_private.output("setZindex");
+		_private.setCss(_private.ls.zIndex);
 	}
 	// ---------------- V functions end ------------------------------------------------
 	// 
@@ -455,7 +552,7 @@ function AbsoTool(selector, options) {
 
 
 
-	// ----------------- private functions: **** ----------------------------------
+	// ----------------- privatx4e functions: **** ----------------------------------
 	/**
 	 * 
 	 * bind mousedown
@@ -463,23 +560,27 @@ function AbsoTool(selector, options) {
 	 */
 	_private.bindSelector = function(){
 		$(_private.selector_arr).each(function(index, val){
-			if($(val).css("display") == "none"){
-				_private.not_visible.push(val);
-			}
-			if($(val).css("background-color") == "rgba(0, 0, 0, 0)"){
-				_private.not_bgcolor.push(val);
-			}
-			$(val).attr("draggable", true).unbind("mousedown", _private.bindDragEvent).bind("mousedown", _private.bindDragEvent);
+			// console.log($(val).css("display"));
+			// console.log($(val).css("background-color"));
+			// console.log($(val).css("display"));
+			// if($(val).css("display") == "none"){
+			// 	_private.not_visible.push(val);
+			// }
+			// if($(val).css("background-color") == "rgba(0, 0, 0, 0)"){
+			// 	_private.not_bgcolor.push(val);
+			// }
+			// $(val).attr("draggable", true).unbind("mousedown", _private.bindDragEvent).bind("mousedown", _private.bindDragEvent);
 
-			// $(val).each(function(i, v){
-				// if($(v).css("display") == "none"){
-				// 	_private.not_visible.push(v);
-				// }
-				// if($(v).css("background-color") == "rgba(0, 0, 0, 0)"){
-				// 	_private.not_bgcolor.push(v);
-				// }
-				// $(v).attr("draggable", true).unbind("mousedown", _private.bindDragEvent).bind("mousedown", _private.bindDragEvent)
-			// })
+
+			$(val).each(function(i, v){
+				if($(v).css("display") == "none"){
+					_private.not_visible.push(v);
+				}
+				if($(v).css("background-color") == "rgba(0, 0, 0, 0)"){
+					_private.not_bgcolor.push(v);
+				}
+				$(v).attr("draggable", true).unbind("mousedown", _private.bindDragEvent).bind("mousedown", _private.bindDragEvent)
+			})
 		})
 	}
 
@@ -542,7 +643,7 @@ function AbsoTool(selector, options) {
 	}
 	_private.adjustwh = function(css, add){
 		var val;
-		var step = add ? _public.step : -_public.step;
+		var step = add ? _public.options.step : -_public.options.step;
 
 		$(_private.getSelector()).each(function(i, v){
 			val = parseFloat($(v).css(css));
@@ -553,16 +654,23 @@ function AbsoTool(selector, options) {
 
 	_private.adjusttl = function(css, add){
 		var val;
-		var step = add ? _public.step : -_public.step;
+		var step = add ? _public.options.step : -_public.options.step;
+		// console.log(step)
 		$(_private.getSelector()).each(function(i, v){
 			val = parseFloat($(v).offset()[css] - $(v).css("margin-" + css).replace(/px/g, ""));
+			if(css == "top"){
+				val = val - (_private.container_cy);
+			}else{
+				val = val - (_private.container_cx);
+			}
+			
 			$(v).css(css, val + step);
 		})
 
 	}
 	_private.adjustzindex = function(add){
 		var val;
-		var step = add ? _public.step : -_public.step
+		var step = add ? _public.options.step : -_public.options.step
 		$(_private.getSelector()).each(function(i, v){
 			val = parseFloat($(v).css("z-index")) ? parseFloat($(v).css("z-index")) : 0;
 			$(v).css("z-index", val + step);
@@ -578,16 +686,16 @@ function AbsoTool(selector, options) {
 		if(single){
 			obj[single] = [];
 			$(single).each(function(i2, v2){
-				var w = $(v2).width();
-				var h = $(v2).height();
+				var w = $(v2).innerWidth();
+				var h = $(v2).innerHeight();
 				obj[single].push([w, h]);
 			})
 		}else{
 			$(_private.selector_arr).each(function(i1, v1){
 				obj[v1] = [];
 				$(v1).each(function(i2, v2){
-					var w = $(v2).width();
-					var h = $(v2).height();
+					var w = $(v2).innerWidth();
+					var h = $(v2).innerHeight();
 					obj[v1].push([w, h]);
 				})
 			})
@@ -595,32 +703,30 @@ function AbsoTool(selector, options) {
 		_private.setData(_private.ls.wh, obj);
 
 		var data;
-		var label;
 		if(index === 0){
 			data = _private.sliceObj(obj, index);
-
-			label = "width";
 		}else if(index === 1){
 			data = _private.sliceObj(obj, index);
-			label = "height";
-		}else if(_public.widthHeightReverse){
+		}else if(_public.options.widthHeightReverse){
 			data = _private.reverseObj(obj);
-			label = "height & width";
 		}else{
 			data = obj;
-			label = "width & height";
 		}
-		_private.output(data, label);
-		return JSON.stringify(data);
+		return data;
 	}
 
 	//拿offset
 	_private.gettl = function(index, single){
 		var obj = {};
+		_public.showDisplayNone();
 		if(single){
 			obj[single] = [];
 			$(single).each(function(i2, v2){
 				var os = $(v2).offset();
+				if(_private.container_position == "relative"){
+					os.top -= _private.container_cy;
+					os.left -= _private.container_cx;
+				}
 				obj[single].push([os.top, os.left]);
 			})
 		}else{
@@ -628,29 +734,29 @@ function AbsoTool(selector, options) {
 				obj[v1] = [];
 				$(v1).each(function(i2, v2){
 					var os = $(v2).offset();
+					if(_private.container_position == "relative"){
+						os.top -= _private.container_cy;
+						os.left -= _private.container_cx;
+					}
 					obj[v1].push([os.top, os.left]);
 				})
 			})
 		}
+		_public.hideDisplayNone();
 		_private.setData(_private.ls.tl, obj);
 
 		var data;
-		var label;
 		if(index === 0){
 			data = _private.sliceObj(obj, index);
-			label = "left (can't get elect which display: none)";
 		}else if(index === 1){
 			data = _private.sliceObj(obj, index);
-			label = "top (can't get ele which display: none)";
-		}else if(_public.topLeftReverse){
+		}else if(_public.options.topLeftReverse){
 			data = _private.reverseObj(obj);
-			label = "left & top (can't get ele which display: none)";
 		}else{
 			data = obj;
-			label = "top & left (can't get ele which display: none)";
 		}
-		_private.output(data, label);
-		return JSON.stringify(data);
+
+		return data;
 	}
 
 	_private.getZindex = function(){
@@ -665,8 +771,8 @@ function AbsoTool(selector, options) {
 		_private.setData(_private.ls.zIndex, obj);
 
 		var data = obj;
-		_private.output(data, "z-index");
-		return JSON.stringify(data);
+
+		return data;
 	}
 	// ------------------ get end-----------------------------------------
 
@@ -700,6 +806,7 @@ function AbsoTool(selector, options) {
 
 					_private.hitFunc("switchStep", _public.switchStep);
 
+					_private.hitFunc("getCss", _public.getCss);
 					_private.hitFunc("getWidthHeight", _public.getWidthHeight);
 					_private.hitFunc("getWidth", _public.getWidth);
 					_private.hitFunc("getHeight", _public.getHeight);
@@ -717,6 +824,7 @@ function AbsoTool(selector, options) {
 				}
 
 
+				_private.hitFunc("setCssRule", _public.setCssRule);
 				_private.hitFunc("setWidthHeight", _public.setWidthHeight);
 				_private.hitFunc("setTopLeft", _public.setTopLeft);
 				_private.hitFunc("setZindex", _public.setZindex);
@@ -737,6 +845,7 @@ function AbsoTool(selector, options) {
 	 * @return {[type]}   [description]
 	 */
 	_private.listenAjust = function(e){
+		// console.log(e)
 		if(e){
 			var val;
 			var hit = false;
@@ -918,9 +1027,9 @@ function AbsoTool(selector, options) {
 	 * @param  {[type]} css [description]
 	 * @return {[type]}     [description]
 	 */
-	_private.getmp = function(css){
+	_private.getmp = function(el, css){
 		var arr = [0,0,0,0];
-		var str = $(_private.that).css(css).replace(/px/g, "");
+		var str = $(el).css(css).replace(/px/g, "");
 		var temp = str.split(" ");
 
 		if(temp.length == 1){
@@ -953,11 +1062,11 @@ function AbsoTool(selector, options) {
 	 * @return {[type]}      [description]
 	 */
 	_private.bgcolor = function(flag){
-		var len = _public.bgColors.length;
+		var len = _public.options.bgColors.length;
 		if(flag){
 			$(_private.not_bgcolor).each(function(index, val){
 				$(val).css({
-					"background-color": _public.bgColors[index % len],
+					"background-color": _public.options.bgColors[index % len],
 				})
 			})
 		}else{
@@ -999,6 +1108,27 @@ function AbsoTool(selector, options) {
 					})
 				}
 				break;
+			case _private.ls.css:
+				var style = document.createElement("style");
+				style.type = "text/css";
+				try{
+					for(var k in data){
+						style.appendChild(document.createTextNode(k + data[k]));
+					}
+					
+				} catch (e){
+					style.styleSheet.cssText = '';
+					for(var k in data){
+						style.styleSheet.cssText += k + data[k] + ' ';
+					}
+				}
+				var head = document.getElementsByTagName("head")[0];
+				head.appendChild(style);
+				_private.output('--- add css rules ---');
+				console.log(style);
+				break;
+			default:
+				break;
 		}
 		
 	}
@@ -1029,11 +1159,11 @@ function AbsoTool(selector, options) {
 			position: "absolute",
 			top: offset.top,
 			left: offset.left,
-			background: _public.rect.backgroundColor,
-			opacity: _public.rect.opacity,
+			background: _public.options.rect.backgroundColor,
+			opacity: _public.options.rect.opacity,
 			
 		})
-		if(_public.rect.alwaysTop){
+		if(_public.options.rect.alwaysTop){
 			$("#" + id).css({
 				"z-index": parseFloat($(that).css("z-index")) ? parseFloat($(that).css("z-index"))+1 : "auto",
 			})
@@ -1055,73 +1185,90 @@ function AbsoTool(selector, options) {
 		}
 		// 相切类型
 		var tangentOffset
-		if(_public.line.outerTangent){
-			tangentOffset = [-_public.line.borderWidth, 0, -_public.line.borderWidth, 0];
+		if(_public.options.line.outerTangent){
+			tangentOffset = [-_public.options.line.borderWidth, 0, -_public.options.line.borderWidth, 0];
 		}else{
-			tangentOffset = [0, -_public.line.borderWidth, 0, -_public.line.borderWidth];
+			tangentOffset = [0, -_public.options.line.borderWidth, 0, -_public.options.line.borderWidth];
 		}
 
 		//上1
 		$("#" + _private.line_class + "-0").css({
 			width: 0,
-			height: window.innerHeight,
+			// height: window.innerHeight,
+			height: $(_private.container).height(),
 			position: "absolute",
-			top: 0,
+			// top: 0,
+			top: $(_private.container).offset().top,
 			left: offset.left + tangentOffset[0],
-			opacity: _public.line.opacity,
-			"border-left": _public.line.borderWidth + "px " + _public.line.borderStyle + " " + _public.line.borderColor,
+			opacity: _public.options.line.opacity,
+			"border-left": _public.options.line.borderWidth + "px " + _public.options.line.borderStyle + " " + _public.options.line.borderColor,
 		})
 
 		// 上2
 		$("#" + _private.line_class + "-1").css({
 			width: 0,
-			height: window.innerHeight,
+			// height: window.innerHeight,
+			height: $(_private.container).height(),
 			position: "absolute",
-			top: 0,
+			// top: 0,
+			top: $(_private.container).offset().top,
 			left: offset.left + outerWidth + tangentOffset[1],
-			opacity: _public.line.opacity,
-			"border-right": _public.line.borderWidth + "px  " + _public.line.borderStyle + " " + _public.line.borderColor,
+			opacity: _public.options.line.opacity,
+			"border-right": _public.options.line.borderWidth + "px  " + _public.options.line.borderStyle + " " + _public.options.line.borderColor,
 		})
 
 		// 左1
 		$("#" + _private.line_class + "-2").css({
-			width: window.innerWidth,
+			// width: window.innerWidth,
+			width: $(_private.container).width(),
 			height: 0,
 			position: "absolute",
 			top: offset.top + tangentOffset[2], 
-			left: 0,
-			opacity: _public.line.opacity,
-			"border-top": _public.line.borderWidth + "px  " + _public.line.borderStyle + " " + _public.line.borderColor,
+			// left: 0,
+			left: $(_private.container).offset().left,
+			opacity: _public.options.line.opacity,
+			"border-top": _public.options.line.borderWidth + "px  " + _public.options.line.borderStyle + " " + _public.options.line.borderColor,
 		})
 
 		// 左2
 		$("#" + _private.line_class + "-3").css({
-			width: window.innerWidth,
+			// width: window.innerWidth,
+			width: $(_private.container).width(),
 			height: 0,
 			position: "absolute",
 			top: offset.top + outerHeight + tangentOffset[3],
-			left: 0,
-			opacity: _public.line.opacity,
-			"border-bottom": _public.line.borderWidth + "px  " + _public.line.borderStyle + " " + _public.line.borderColor,
+			// left: 0,
+			left: $(_private.container).offset().left,
+			opacity: _public.options.line.opacity,
+			"border-bottom": _public.options.line.borderWidth + "px  " + _public.options.line.borderStyle + " " + _public.options.line.borderColor,
 		})
 		
 	}
 
 
 	_private.moveRect = function(x, y){
+		if(_public.options.boundary){
+			var pos = _private.get_mousemove_position(y - _private.cy + _private.container_cy, x - _private.cx + _private.container_cx);			
+		}else{
+			// var pos = [y - _private.cy + _private.container_cy, x - _private.cx + _private.container_cx];
+			var pos = [y - _private.cy, x - _private.cx];
+		}
 		$("#" + _private.id).css({
-			top: y - _private.cy,
-			left: x - _private.cx,
+			top: pos[0],
+			left: pos[1],
 		})
+
 	}
 
 	_private.moveLines = function(x, y){
 		// 相切类型
 		var tangentOffset
-		if(_public.line.outerTangent){
-			tangentOffset = [-_public.line.borderWidth, 0, -_public.line.borderWidth, 0];
+		if(_public.options.line.outerTangent){
+			// tangentOffset = [-_public.options.line.borderWidth + _private.container_cx, 0 + _private.container_cx, -_public.options.line.borderWidth + _private.container_cy,  + _private.container_cy];
+			tangentOffset = [-_public.options.line.borderWidth + 0, 0 + 0, -_public.options.line.borderWidth + 0,  + 0];
 		}else{
-			tangentOffset = [0, -_public.line.borderWidth, 0, -_public.line.borderWidth];
+			// tangentOffset = [0 + _private.container_cx, -_public.options.line.borderWidth + _private.container_cx, 0 + _private.container_cy, -_public.options.line.borderWidth + _private.container_cy];
+			tangentOffset = [0 + 0, -_public.options.line.borderWidth + 0, 0 + 0, -_public.options.line.borderWidth + 0];
 		}
 		// //上1
 		$("#" + _private.line_class + "-0").css({
@@ -1178,8 +1325,8 @@ function AbsoTool(selector, options) {
 		$("body").append(ele1).append(ele2).append(ele3);
 
 		var arr1 = [
-			parseFloat(offset.top - _private.margin[0]),
-			parseFloat(offset.left - _private.margin[3])
+			parseFloat(offset.top - (_private.container_cy + _private.margin[0])),
+			parseFloat(offset.left - (_private.container_cx + _private.margin[3]))
 		];
 
 		var arr2 = [
@@ -1190,56 +1337,56 @@ function AbsoTool(selector, options) {
 		var zindex = parseFloat($(_private.that).css("z-index")) ? parseFloat($(_private.that).css("z-index")) : 0;
 		var arr3 = [zindex];
 
-		var html1 = _private.formatter("tl", _public.tips.topLeft.format, arr1);
-		var html2 = _private.formatter("wh", _public.tips.widthHeight.format, arr2);
-		var html3 = _private.formatter("z-index", _public.tips.zIndex.format, arr3);
+		var html1 = _private.formatter("tl", _public.options.tips.topLeft.format, arr1);
+		var html2 = _private.formatter("wh", _public.options.tips.widthHeight.format, arr2);
+		var html3 = _private.formatter("z-index", _public.options.tips.zIndex.format, arr3);
 
 
 		//先渲染出来拿它的高
 		//html() first to get its height
 		$("#" + id1).html(html1).css({
-			"font-size": _public.tips.topLeft.fontSize,
-			"font-family": _public.tips.topLeft.fontFamily,
-			"background-color": _public.tips.topLeft.backgroundColor,
-			opacity: _public.tips.topLeft.opacity,
-			color: _public.tips.topLeft.color,
-			padding: _public.tips.topLeft.padding,
-			margin: _public.tips.topLeft.margin,
-			height: _public.tips.topLeft.height,
+			"font-size": _public.options.tips.topLeft.fontSize,
+			"font-family": _public.options.tips.topLeft.fontFamily,
+			"background-color": _public.options.tips.topLeft.backgroundColor,
+			opacity: _public.options.tips.topLeft.opacity,
+			color: _public.options.tips.topLeft.color,
+			padding: _public.options.tips.topLeft.padding,
+			margin: _public.options.tips.topLeft.margin,
+			height: _public.options.tips.topLeft.height,
 
 		}).css({
 			position: "absolute",
-			top: offset.top - $("#" + id1).outerHeight(false) + _public.tips.topLeft.top,
+			top: offset.top - $("#" + id1).outerHeight(false) + _public.options.tips.topLeft.top,
 			left: offset.left,
 		})
 
 		$("#" + id2).html(html2).css({
-			"font-size": _public.tips.widthHeight.fontSize,
-			"font-family": _public.tips.widthHeight.fontFamily,
-			"background-color": _public.tips.widthHeight.backgroundColor,
-			opacity: _public.tips.widthHeight.opacity,
-			color: _public.tips.widthHeight.color,
-			padding: _public.tips.widthHeight.padding,
-			margin: _public.tips.widthHeight.margin,
-			height: _public.tips.widthHeight.height,
+			"font-size": _public.options.tips.widthHeight.fontSize,
+			"font-family": _public.options.tips.widthHeight.fontFamily,
+			"background-color": _public.options.tips.widthHeight.backgroundColor,
+			opacity: _public.options.tips.widthHeight.opacity,
+			color: _public.options.tips.widthHeight.color,
+			padding: _public.options.tips.widthHeight.padding,
+			margin: _public.options.tips.widthHeight.margin,
+			height: _public.options.tips.widthHeight.height,
 		}).css({
 			position: "absolute",
-			top: offset.top + _private.outerh + _public.tips.widthHeight.top,
+			top: offset.top + _private.outerh + _public.options.tips.widthHeight.top,
 			left: offset.left,
 		})
 
 		$("#" + id3).html(html3).css({
-			"font-size": _public.tips.zIndex.fontSize,
-			"font-family": _public.tips.zIndex.fontFamily,
-			"background-color": _public.tips.zIndex.backgroundColor,
-			opacity: _public.tips.zIndex.opacity,
-			color: _public.tips.zIndex.color,
-			padding: _public.tips.zIndex.padding,
-			margin: _public.tips.zIndex.margin,
-			height: _public.tips.zIndex.height,
+			"font-size": _public.options.tips.zIndex.fontSize,
+			"font-family": _public.options.tips.zIndex.fontFamily,
+			"background-color": _public.options.tips.zIndex.backgroundColor,
+			opacity: _public.options.tips.zIndex.opacity,
+			color: _public.options.tips.zIndex.color,
+			padding: _public.options.tips.zIndex.padding,
+			margin: _public.options.tips.zIndex.margin,
+			height: _public.options.tips.zIndex.height,
 		}).css({
 			position: "absolute",
-			top: offset.top + _private.outerh + _public.tips.zIndex.top + $("#" + id2).outerHeight(false) + _public.tips.zIndex.top,
+			top: offset.top + _private.outerh + _public.options.tips.zIndex.top + $("#" + id2).outerHeight(false) + _public.options.tips.zIndex.top,
 			left: offset.left,
 		})
 
@@ -1251,8 +1398,8 @@ function AbsoTool(selector, options) {
 		var id3 = _private.id + "-zIndex";
 
 		var arr1 = [
-			parseFloat(y - (_private.cy + _private.margin[0])),
-			parseFloat(x - (_private.cx + _private.margin[3]))
+			parseFloat(y - (_private.cy + _private.container_cy)),
+			parseFloat(x - (_private.cx + _private.container_cx))
 		];
 
 		var arr2 = [
@@ -1261,23 +1408,23 @@ function AbsoTool(selector, options) {
 		];
 
 
-		var html1 = _private.formatter("tl", _public.tips.topLeft.format, arr1);
-		var html2 = _private.formatter("wh", _public.tips.widthHeight.format, arr2);
-		// var html3 = _private.formatter("wh", _public.tips.zIndex.format, arr3);
+		var html1 = _private.formatter("tl", _public.options.tips.topLeft.format, arr1);
+		var html2 = _private.formatter("wh", _public.options.tips.widthHeight.format, arr2);
+		// var html3 = _private.formatter("wh", _public.options.tips.zIndex.format, arr3);
 
 		$("#" + id1).html(html1).css({
-			top: y - (_private.cy)  - $("#" + id1).outerHeight(false) + _public.tips.topLeft.top,
-			left: x - (_private.cx),
+			top: y - (_private.cy - 0)  - $("#" + id1).outerHeight(false) + _public.options.tips.topLeft.top,
+			left: x - (_private.cx - 0),
 		})
 
 		$("#" + id2).html(html2).css({
-			top: y - (_private.cy)  + _private.outerh  + _public.tips.widthHeight.top,
-			left: x - (_private.cx),
+			top: y - (_private.cy - 0)  + _private.outerh  + _public.options.tips.widthHeight.top,
+			left: x - (_private.cx - 0),
 		})
 
 		$("#" + id3).css({
-			top: y - (_private.cy)  + _private.outerh  + _public.tips.widthHeight.top + $("#" + id2).outerHeight(false) + _public.tips.zIndex.top,
-			left: x - (_private.cx),
+			top: y - (_private.cy - 0)  + _private.outerh  + _public.options.tips.widthHeight.top + $("#" + id2).outerHeight(false) + _public.options.tips.zIndex.top,
+			left: x - (_private.cx - 0),
 		})
 	}
 
@@ -1315,6 +1462,9 @@ function AbsoTool(selector, options) {
 		switch(type){
 			case "mousedown":
 				_private.that = this;
+				// _private.container = $(this).parent();
+				_private.container = $(this).offsetParent();
+				// console.log(_private.container);
 				if(_private.ifPressedAny(_public.config.keyCode.ctrl)){
 					$(_private.that).addClass(_private.ctrl_class);
 					
@@ -1351,17 +1501,47 @@ function AbsoTool(selector, options) {
 		var x = e.originalEvent.pageX;
 		var y = e.originalEvent.pageY;
 
-		_private.w = $(_private.that).width();
-		_private.h = $(_private.that).height();
+		_private.w = $(_private.that).innerWidth();
+		_private.h = $(_private.that).innerHeight();
 
-		// _private.padding = _private.getmp("padding");
-		_private.margin = _private.getmp("margin");
+		// _private.padding = _private.getmp(_private.that, "padding");
+		_private.margin = _private.getmp(_private.that, "margin");
 
+		_private.container_offset = _private.container.offset();
+		_private.container_position = _private.container.css("position");
+		// _private.container_margin = _private.getmp(_private.container, "margin");
+		switch(_private.container_position){
+			// 相對時，拿樣式的時候要減去container_cx和container_cy
+			case "relative":
+				_private.container_cx = _private.container_offset.left;
+				_private.container_cy = _private.container_offset.top;
+				// _private.container_cx = 0;
+				// _private.container_cy = 0;
+				break;
+			case "static":
+				_private.container_cx = 0;
+				_private.container_cy = 0;
+				break;
+			case "absolute":
+				_private.container_cx = _private.container_offset.left;
+				_private.container_cy = _private.container_offset.top;
+				// _private.container_cx = 0;
+				// _private.container_cy = 0;
+				break;
+			default:
+				_private.container_cx = 0;
+				_private.container_cy = 0;
+				break;
+		}
+		// parent border好像也有影響
+		_private.container_cy += parseFloat($(_private.container).css("border-top"));
+		_private.container_cx += parseFloat($(_private.container).css("border-left"));
+		// console.log(_private.container_position)
+		// console.log(_private.container_cy, _private.container_cx);
+		// _private.cy = y - offset.top + _private.container_cx;
+		// _private.cx = x - offset.left + _private.container_cy;
 		_private.cy = y - offset.top;
 		_private.cx = x - offset.left;
-
-		// _private.cy = y - (offset.top + _private.margin[0]);
-		// _private.cx = x - (offset.left + _private.margin[3]);
 
 		_private.calOuterwh();
 
@@ -1381,9 +1561,15 @@ function AbsoTool(selector, options) {
 		var x = e.originalEvent.pageX;
 		var y = e.originalEvent.pageY;
 
+		if(_public.options.boundary){
+			var pos = _private.get_mousemove_position(y - (_private.cy + _private.margin[0] + _private.container_cy), x - (_private.cx + _private.margin[3] + _private.container_cx));
+		}else{
+			var pos = [y - (_private.cy + _private.margin[0] + _private.container_cy), x - (_private.cx + _private.margin[3] + _private.container_cx)];
+		}
+
 		$(_private.that).css({
-			top: y - (_private.cy + _private.margin[0]),
-			left: x - (_private.cx + _private.margin[3]),
+			top: pos[0],
+			left: pos[1],
 		})
 
 		_private.moveLines(x, y);
@@ -1401,6 +1587,10 @@ function AbsoTool(selector, options) {
 		$("#" + _private.id).remove();
 		$("." + _private.line_class).remove();
 		$("." + _private.tips_class).remove();
+
+		if(_public.options.printAfterDrag){
+			_public.getCurrentTarget();
+		}
 
 		_private.setBindMoveEnd(false);
 	}
@@ -1597,7 +1787,7 @@ function AbsoTool(selector, options) {
 	 * @param  {[type]} comment [description]
 	 * @return {[type]}         [description]
 	 */
-	_private.output = function(arg, comment){
+	_private.output = function(arg, comment, css=0){
 		var type = typeof(arg);
 		if(type == "string"){
 			console.log(arg)
@@ -1631,7 +1821,60 @@ function AbsoTool(selector, options) {
 		}
 		return false;
 	}
+
+
+
+	/**
+	 * copy data into clipboard base on type
+	 * @param  {[type]} data [description]
+	 * @param  {[type]} type [description]
+	 * @return {[type]}      [description]
+	 */
+	_private.copy2cb = function(data, type){
+		var text = '';
+		switch(type){
+			case 'css':
+				for(var key in data){
+					text += (key + ' ' + data[key]);
+				}
+				break;
+			case 'array':
+				for(var key in data){
+					text += key.substr(1) + " = " + JSON.stringify(data[key]) + ";\n";
+				}
+				break;
+		}
+		var textarea = document.createElement("textarea");
+		textarea.value = text;
+		document.body.appendChild(textarea);
+		textarea.select();
+		document.execCommand("copy", false, null);
+		textarea.remove();
+		return text;
+
+	}
+
+	/**
+	 * enough freedom
+	 * @param  {[type]} top  [description]
+	 * @param  {[type]} left [description]
+	 * @return {[type]}      [description]
+	 */
+	_private.get_mousemove_position = function(top, left){
+		var new_top = Math.max(0, top);
+		new_top = Math.min(_private.container.outerHeight(false) - _private.h, new_top)
+
+		var new_left = Math.max(0, left);
+		new_left = Math.min(_private.container.outerWidth(false) - _private.w, new_left)
+
+		return [new_top, new_left];
+	}
+
+	_private.get_boder_width = function(border){
+
+	}
 	// ----------------- operation end --------------------------------------
 	
 	return _public;
+
 }
