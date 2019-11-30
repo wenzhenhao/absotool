@@ -23,11 +23,16 @@
 | adjustTopLeft | Z + 3 | 调整offset().top和offset().left |
 | adjustZindex | Z + 4 | 调整z-index |
 | switchStep | Z + Q | 切换[WASD]时的步长 |
-| getCss | C + 1 | 复制css到剪贴板 |
+| showTips | Z + T | 现实或隐藏关于位置，宽高，z-index的提示 |
+| printKeyCode | Z + H | keyup时打印出keycode |
+| showDisplayNone | X + 1 | show实例化时原本是display:none;的元素 |
+| hideDisplayNone | X + 2 | hide[X + 1] |
+| addBackgroundColor | X + 3 | 为实例化时原本无backgroud-color的元素加底色 |
+| removeBackgroundColor | X + 4 | remove[X + 3] |
+| getCss | C + 1 | 复制css到剪贴板，暂时不带id |
+| setCssRule | V + 1 | 复位到上一次[C + 1] |
 
 * adjust前缀的功能需用到[WASD]四个键，可配合[SHIFT]和[CTRL + 左键]使用。
-
-* get前缀的功能和adjust前缀的对应。按[C + 对应数字]可打印相应信息。
 
 * set前缀的功能和get前缀的对应。如果你不小心F5了，可按[V + 对应数字]可以还原布局，前提是你之前用了C功能。
 
@@ -36,3 +41,5 @@
 * 想了解更多的话可以查看源码，应该都能看得懂。
 
 ### MIT开源
+
+
