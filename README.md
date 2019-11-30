@@ -19,11 +19,11 @@
 | :----:| :----: | :----: |
 | init | Z + 1 | 初始化后可以拖动单个元素。|
 | stop | Z + \` | 停止 |
-| printKeyCode | Z + H | keyup时打印出keycode |
 | adjustWidthHeight | Z + 2 | 调整宽高 |
 | adjustTopLeft | Z + 3 | 调整offset().top和offset().left |
 | adjustZindex | Z + 4 | 调整z-index |
 | switchStep | Z + Q | 切换[WASD]时的步长 |
+| getCss | C + 1 | 复制css到剪贴板 |
 
 * adjust前缀的功能需用到[WASD]四个键，可配合[SHIFT]和[CTRL + 左键]使用。
 
