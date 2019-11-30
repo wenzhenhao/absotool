@@ -77,7 +77,7 @@ function AbsoTool(selector, options) {
 	_public.options.topLeftReverse = false,     // false: [top,left], true: [left, top]
 	//拖放结束打印data
 	_public.options.printAfterDrag = true,		// mouseup print data
-	_public.options.boundary = false;			// 邊界
+	_public.options.boundary = false;			// 边界
 
 	// 比较重要的配置
 	_public.config = {
@@ -101,7 +101,7 @@ function AbsoTool(selector, options) {
 			, adjustWidthHeight: [90,50]		// [Z + 2] 用wasd或方向键调整宽高
 			, adjustTopLeft: [90,51]			// [Z + 3] 用wasd或方向键调整offset().top和offset().left
 			, adjustZindex: [90,52]	            // [Z + 4] 用wasd或方向键调整z-index
-			, switchStep: [90,81]               // [Z + Q] 切换_public.options.step的值，以上3个功能共用_public.options.step
+			, switchStep: [90,81]               // [Z + Q] 切换_public.options.step的值，以上3个功能共享_public.options.step
 			, showTips: [90,84]                 // [Z + T] 类似F12的inspect，有宽高，top和left，z-index的提示
 
 			, showDisplayNone: [88,49]			// [X + 1] show()那些实例化时display:none的selector，type=hidden可能获取不到
@@ -110,8 +110,8 @@ function AbsoTool(selector, options) {
 			, removeBackgroundColor: [88,52]	// [X + 4] remove[X + 3]
 
 			//  C 方法
-			//  20191025 C方法之後都可以ctrl + v 貼數據
-			, getCss: [67,49]           		// [C + 1] 複製樣式到剪貼板，可按ctrl + v 貼到css文件
+			//  20191025 C方法之后都可以ctrl + v 贴数据
+			, getCss: [67,49]           		// [C + 1] 复制样式到剪贴板，可按ctrl + v 贴到css文件
 			, getWidthHeight: [67,50]           // [C + 2] 打印selector的宽高，也会返回JSON.stringfy()。打印格式为：[[width,height]]
 			, getTopLeft: [67,51]				// [C + 3] 打印display不为none的selector的offset().top和offset().left，也会返回JSON.stringfy()。打印格式为：[[top,left]]
 			, getZindex: [67,52]                // [C + 4] 打印selector的z-index，也会返回JSON.stringfy()。打印格式为：[z-index]
@@ -123,7 +123,7 @@ function AbsoTool(selector, options) {
 
 			// 调用以get开头的方法，除去getCurrentTarget之外，都会把相应的数据保存在localStorage
 			// 所以在你F5之后可以调用一下方法来还原它们的位置，大小，z-index
-			, setCssRule: [86,49]				// [V + 1] 還原大小，位置，z-index
+			, setCssRule: [86,49]				// [V + 1] 还原大小，位置，z-index
 			, setWidthHeight: [86,50]           // [V + 2] 根据localStorage来还原 大小
 			, setTopLeft: [86,51]               // [V + 3] 根据localStorage来还原 位置
 			, setZindex: [86,52]                // [V + 4] 根据localStorage来还原 z-index
@@ -148,7 +148,7 @@ function AbsoTool(selector, options) {
 
 	_private.container;
 	_private.container_offset;
-	// _private.container_margin;  // margin可在offset中體現出來
+	// _private.container_margin;  // margin可在offset中体现出来
 	_private.container_cx;
 	_private.container_cy;
 	_private.container_position;
@@ -387,7 +387,7 @@ function AbsoTool(selector, options) {
 	 */
 	_public.getCss = function(){
 		var css = {};
-		// show出來才能拿到offset
+		// show出来才能拿到offset
 		_public.showDisplayNone();
 		$(_private.selector_arr).each(function(i1, v1){
 			$(v1).each(function(i2, v2){
@@ -1511,7 +1511,7 @@ function AbsoTool(selector, options) {
 		_private.container_position = _private.container.css("position");
 		// _private.container_margin = _private.getmp(_private.container, "margin");
 		switch(_private.container_position){
-			// 相對時，拿樣式的時候要減去container_cx和container_cy
+			// 相对时，拿样式的时候要减去container_cx和container_cy
 			case "relative":
 				_private.container_cx = _private.container_offset.left;
 				_private.container_cy = _private.container_offset.top;
@@ -1533,7 +1533,7 @@ function AbsoTool(selector, options) {
 				_private.container_cy = 0;
 				break;
 		}
-		// parent border好像也有影響
+		// parent border好像也有影响
 		_private.container_cy += parseFloat($(_private.container).css("border-top"));
 		_private.container_cx += parseFloat($(_private.container).css("border-left"));
 		// console.log(_private.container_position)
