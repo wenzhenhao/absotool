@@ -2110,7 +2110,18 @@ function AbsoTool(selector, options) {
 			}else{
 				_private.setPanelPos(_private.plx, _private.ply);
 			}
-		} 
+		}else{
+			var btns = document.querySelectorAll(`#${_private.panel_class} .${_private.row_item_class}`);
+			for (var i = 0; i < btns.length; i++) {
+				btns[i].removeEventListener("mousedown", _private.clickPanelBtn);
+				btns[i].removeEventListener("mousemove", _private.clickPanelBtn);
+				btns[i].removeEventListener("mouseup", _private.clickPanelBtn);
+				btns[i].removeEventListener("touchstart", _private.clickPanelBtn);
+				btns[i].removeEventListener("touchmove", _private.clickPanelBtn);
+				btns[i].removeEventListener("touchend", _private.clickPanelBtn);
+			}
+			$("#"+_private.panel_class).remove();
+		}
 
 	}
 
