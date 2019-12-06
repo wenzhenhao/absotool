@@ -397,8 +397,9 @@ function AbsoTool(selector, options) {
 				var h = $(v2).innerHeight();
 				var z = $(v2).css("z-index");
 				if(_private.container_position == "relative"){
-					offset.top -= (_private.container_cy + _private.margin[0]);
-					offset.left -= (_private.container_cx + _private.margin[3]);
+					var m = _private.getmp(v2, "margin");
+					offset.top = offset.top - (_private.container_cy + m[0]);
+					offset.left = offset.left - (_private.container_cx + m[3]);
 				}
 				css[k] = `{
 	position: absolute;
