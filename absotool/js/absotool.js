@@ -24,9 +24,9 @@ function AbsoTool(selector, options) {
 	}
 
 	// 用wasd或方向键调宽高、offset().top和offset().left、z-index时的步长
-	_public.options.step;	//init时默认为_public.options.stepArr[_public.options.stepIndex]
 	_public.options.stepArr = [1,100];
 	_public.options.stepIndex = 0;
+	_public.options.step = _public.options.stepArr[0];	//init时默认为_public.options.stepArr[_public.options.stepIndex]
 
 	// 调用addBackgroundColor [X + 3] 时，为没有backgroud-color的selector加backgroud-color
 	_public.options.bgColors = [
@@ -69,6 +69,9 @@ function AbsoTool(selector, options) {
 			opacity: 1,
 			padding: 2,
 			format: "z-index : {zIndex}",                    // html格式，会把值替换到{zIndex}
+		},
+		panel: {
+
 		}
 	}
 
@@ -77,11 +80,11 @@ function AbsoTool(selector, options) {
 	_public.options.topLeftReverse = false,     // false: [top,left], true: [left, top]
 	//拖放结束打印data
 	_public.options.printAfterDrag = true,		// mouseup print data
-	_public.options.boundary = false;			// 边界
+	_public.options.boundary = false;			// 邊界
 
 	// 比较重要的配置
 	_public.config = {
-		// 功能开关 
+		// 功能开关 init
 		funcSwitch: {
 			printKeyCode: "off",
 			showTips: "on",
@@ -89,6 +92,9 @@ function AbsoTool(selector, options) {
 			adjustWidthHeight: "off",
 			adjustTopLeft: "on",
 			adjustZindex: "off",
+			//
+			init: "off",
+			drawPanel: "on",
 		},
 
 		// 快捷键 [keycode1, keycode2,...]。注意防止按键冲突
@@ -101,8 +107,9 @@ function AbsoTool(selector, options) {
 			, adjustWidthHeight: [90,50]		// [Z + 2] 用wasd或方向键调整宽高
 			, adjustTopLeft: [90,51]			// [Z + 3] 用wasd或方向键调整offset().top和offset().left
 			, adjustZindex: [90,52]	            // [Z + 4] 用wasd或方向键调整z-index
-			, switchStep: [90,81]               // [Z + Q] 切换_public.options.step的值，以上3个功能共享_public.options.step
+			, switchStep: [90,81]               // [Z + Q] 切换_public.options.step的值，以上3个功能共用_public.options.step
 			, showTips: [90,84]                 // [Z + T] 类似F12的inspect，有宽高，top和left，z-index的提示
+			, drawPanel: [90,69]				// [Z + E] show面板
 
 			, showDisplayNone: [88,49]			// [X + 1] show()那些实例化时display:none的selector，type=hidden可能获取不到
 			, hideDisplayNone: [88,50]			// [X + 2] hide()[X + 1]
@@ -110,8 +117,8 @@ function AbsoTool(selector, options) {
 			, removeBackgroundColor: [88,52]	// [X + 4] remove[X + 3]
 
 			//  C 方法
-			//  20191025 C方法之后都可以ctrl + v 贴数据
-			, getCss: [67,49]           		// [C + 1] 复制样式到剪贴板，可按ctrl + v 贴到css文件
+			//  20191025 C方法之後都可以ctrl + v 貼數據
+			, getCss: [67,49]           		// [C + 1] 複製樣式到剪貼板，可按ctrl + v 貼到css文件
 			, getWidthHeight: [67,50]           // [C + 2] 打印selector的宽高，也会返回JSON.stringfy()。打印格式为：[[width,height]]
 			, getTopLeft: [67,51]				// [C + 3] 打印display不为none的selector的offset().top和offset().left，也会返回JSON.stringfy()。打印格式为：[[top,left]]
 			, getZindex: [67,52]                // [C + 4] 打印selector的z-index，也会返回JSON.stringfy()。打印格式为：[z-index]
@@ -123,7 +130,7 @@ function AbsoTool(selector, options) {
 
 			// 调用以get开头的方法，除去getCurrentTarget之外，都会把相应的数据保存在localStorage
 			// 所以在你F5之后可以调用一下方法来还原它们的位置，大小，z-index
-			, setCssRule: [86,49]				// [V + 1] 还原大小，位置，z-index
+			, setCss: [86,49]				// [V + 1] 還原大小，位置，z-index
 			, setWidthHeight: [86,50]           // [V + 2] 根据localStorage来还原 大小
 			, setTopLeft: [86,51]               // [V + 3] 根据localStorage来还原 位置
 			, setZindex: [86,52]                // [V + 4] 根据localStorage来还原 z-index
@@ -141,14 +148,17 @@ function AbsoTool(selector, options) {
 		
 	}
 
-	// private variable
+
+	// ------------  private variable  ----------------
 	_private.prefix = "absotool-";
 	_private.selector_arr = [];
 	_private.that;
 
-	_private.container;
+	_private.self_container = null; // 動態生成的html都放進這裡
+	// _private.self_container = document.body; // 動態生成的html都放進這裡
+	_private.container;	// offsetParent()
 	_private.container_offset;
-	// _private.container_margin;  // margin可在offset中体现出来
+	// _private.container_margin;  // margin可在offset中體現出來
 	_private.container_cx;
 	_private.container_cy;
 	_private.container_position;
@@ -164,12 +174,21 @@ function AbsoTool(selector, options) {
 
 	_private.cx = 0;
 	_private.cy = 0;
+
+	// css類
 	_private.id = _private.prefix + "drag-id";
+	_private.container_class = _private.prefix + "container";
 	_private.rect_class = _private.prefix + "drag-rect";
 	_private.line_class = _private.prefix + "drag-line";
 	_private.tips_class = _private.prefix + "drag-tips";
-	_private.adjust_css;
-	_private.key_pressed = [];
+	_private.panel_class = _private.prefix + "drag-panel";
+	_private.row_class = _private.prefix + "row";
+	_private.row_item_class = _private.prefix + "row-item";
+	_private.ctrl_class = _private.prefix + "drag-group";
+	_private.ctrl_rect_class = _private.prefix + "drag-group-rect";
+
+	_private.adjust_css;	// 當前在調整的css
+	_private.key_pressed = {};
 
 	_private.not_visible = [];
 	_private.not_bgcolor = [];
@@ -177,15 +196,35 @@ function AbsoTool(selector, options) {
 		["adjustWidthHeight", "adjustTopLeft", "adjustZindex"],
 	];
 	_private.working = false;
-	_private.ctrl_class = "drag-group";
-	_private.ctrl_rect_class = "drag-group-rect";
+
+	// 本地存儲key
 	_private.ls = {
 		prefix: "absotool_",
 		wh: "width_height",
 		tl: "top_left",
 		zIndex: "z-index",
 		css: "css",
+		cssStr: "cssStr",
+		cssObj: "cssObj",
 	}
+
+	// 兼容touch
+	_private.sys = "";	// 系統
+	_private._window = 'window';
+	_private._ios = 'ios';
+	_private._android = 'android';
+
+
+	// 面板相關
+	_private.pcx = 0;
+	_private.pcy = 0;
+	_private.pm = 10;
+	_private.plx = 9999;
+	_private.ply = 0;
+	_private.btn_pressed = null;	// 面板mousedown的btn，存keycode
+	_private.btn_pressed_time;		// 面板mousedown的btn timestamp
+	_private.fun_on_class = _private.prefix + "func-on";
+	_private.loadedCss = false;
 	// private variable end
 
 
@@ -195,9 +234,16 @@ function AbsoTool(selector, options) {
 	 * @return {[type]} [description]
 	 */
 	_public.initListen = function(){
+		_private.sys = _private.getSystem();
+		console.log(_private.sys);
 		$(document).bind("keydown", _private.listenFunc)
 		$(document).bind("keyup", _private.listenFunc)
 
+		_private.initContainer();
+		_private.initFunc();
+
+		_private.addPanelCss();
+		// _public.drawPanel();
 	}
 
 	/**
@@ -246,12 +292,13 @@ function AbsoTool(selector, options) {
 	_public.init = function(){
 		_private.output("absotool init start");
 		_public.setOptions(options);
-		_public.options.step = _public.options.stepArr[_public.options.stepIndex];
+		_public.options.step = _public.options.stepArr[_public.options.stepIndex % _public.options.stepArr.length];
 		_public.addSelector(selector);
-		_private.initFunc();
 		$(document).unbind("click", _private.ctrlControl).bind("click", _private.ctrlControl);
 		// _private.output(_private.selector_arr);
 		_private.output("absotool init done. you can drag now.");
+		_private.funcOn("init");
+		_private.updatePanel();
 	}
 
 	/**
@@ -264,6 +311,8 @@ function AbsoTool(selector, options) {
 		_private.stopAjust();
 		$(document).unbind("click", _private.ctrlControl);
 		_private.working = false;
+		_private.funcOff("init");
+		_private.updatePanel();
 
 	}
 
@@ -275,8 +324,8 @@ function AbsoTool(selector, options) {
 	 */
 	_public.switchStep = function(){
 		_public.options.step = _public.options.stepArr[(++_public.options.stepIndex) % _public.options.stepArr.length];
-		if(_public.options.stepIndex > _public.options.stepArr.length) _public.options.stepIndex = 0;
-		_private.output("step is " + _public.options.step + " now.")
+		_private.output("step is " + _public.options.step + " now.");
+		_private.updatePanel();
 	}
 
 	/**
@@ -296,6 +345,7 @@ function AbsoTool(selector, options) {
 		var css = "";
 		if(on)  css = "wh";
 		_private.adjustCss(css);
+		_private.updatePanel();
 	}
 
 	/**
@@ -304,11 +354,13 @@ function AbsoTool(selector, options) {
 	 * @return {[type]}    [description]
 	 */
 	_public.adjustTopLeft = function(on){
+		// console.log(arguments)
 		var css = "";
 		if(on){
 			css = "tl";
 		}  
 		_private.adjustCss(css);
+		_private.updatePanel();
 	}
 
 	/**
@@ -317,6 +369,7 @@ function AbsoTool(selector, options) {
 	 */
 	_public.adjustZindex = function(){
 		_private.adjustCss("z-index");
+		_private.updatePanel();
 	}
 
 	/**
@@ -325,6 +378,7 @@ function AbsoTool(selector, options) {
 	 * @return {[type]}    [description]
 	 */
 	_public.showTips = function(on){
+		// console.log(arguments)
 		if(on){
 			$("." + _private.tips_class).show();
 			var offset = $(_private.that).offset();
@@ -332,6 +386,7 @@ function AbsoTool(selector, options) {
 		}else{
 			$("." + _private.tips_class).hide();
 		} 
+		_private.updatePanel();
 	}
 	//-------------------- Z functions end -------------------------------------------
 
@@ -387,7 +442,16 @@ function AbsoTool(selector, options) {
 	 */
 	_public.getCss = function(){
 		var css = {};
-		// show出来才能拿到offset
+		var data = {};
+
+		if(!_private.container){
+			var text = "please click a draggable element first to get its offset parent."
+			// alert(text);
+			console.log(text);
+			_private.copy2cb(text);
+			return;
+		}
+		// show出來才能拿到offset
 		_public.showDisplayNone();
 		$(_private.selector_arr).each(function(i1, v1){
 			$(v1).each(function(i2, v2){
@@ -396,6 +460,7 @@ function AbsoTool(selector, options) {
 				var w = $(v2).innerWidth();
 				var h = $(v2).innerHeight();
 				var z = $(v2).css("z-index");
+				// console.log(offset.top, _private.container_cy, _private.margin[0])
 				if(_private.container_position == "relative"){
 					var m = _private.getmp(v2, "margin");
 					offset.top = offset.top - (_private.container_cy + m[0]);
@@ -409,17 +474,30 @@ function AbsoTool(selector, options) {
 	height: ${h}px;
 	z-index: ${z};
 }
-`
-			})
+`;
+				data[k] = {};
+
+				var obj = {
+					position: "absolute",
+					top: offset.top,
+					left: offset.left,
+					width: w,
+					height: h,
+					"z-index": z,
+				};
+				data[k] = obj;
+			});
+
 		})
 		// console.log(css);
 		// console.log(JSON.stringify(css));
-		_private.setData('css', css);
+		_private.setData(_private.ls.cssStr, css);
+		_private.setData(_private.ls.cssObj, data);
 		_public.hideDisplayNone();
 
 		_private.output('--- copy css into clipboard, you can paste into .css ---');
-		_private.copy2cb(css, 'css')
-		
+		_private.copy2cb(css, 'css');
+		_private.updatePanel();
 
 	}
 
@@ -529,9 +607,9 @@ function AbsoTool(selector, options) {
 	/**
 	 * where there is a get, there is a set
 	 */
-	_public.setCssRule = function(){
-		_private.output("setCssRule");
-		_private.setCss(_private.ls.css);
+	_public.setCss = function(){
+		_private.output("setCss");
+		_private.setCss(_private.ls.cssObj);
 	}
 	_public.setWidthHeight = function(){
 		_private.output("setWidthHeight");
@@ -548,7 +626,7 @@ function AbsoTool(selector, options) {
 		_private.setCss(_private.ls.zIndex);
 	}
 	// ---------------- V functions end ------------------------------------------------
-	// 
+
 
 
 
@@ -580,7 +658,17 @@ function AbsoTool(selector, options) {
 				if($(v).css("background-color") == "rgba(0, 0, 0, 0)"){
 					_private.not_bgcolor.push(v);
 				}
-				$(v).attr("draggable", true).unbind("mousedown", _private.bindDragEvent).bind("mousedown", _private.bindDragEvent)
+				// $(v).attr("draggable", true).unbind("mousedown", _private.bindDragEvent).bind("mousedown", _private.bindDragEvent)
+				v.draggable = true;
+				if(_private.sys == _private._window){
+					v.removeEventListener("mousedown", _private.bindDragEvent);
+					v.addEventListener("mousedown", _private.bindDragEvent);
+				}else{
+					v.removeEventListener("touchstart", _private.bindDragEvent);
+					v.addEventListener("touchstart", _private.bindDragEvent, {passive: false, capture: false});
+				}
+
+
 			})
 		})
 	}
@@ -591,15 +679,19 @@ function AbsoTool(selector, options) {
 	 */
 	_private.unbindSelector = function(){
 		$(_private.selector_arr).each(function(index, val){
-			$(val).attr("draggable", false).unbind("mousedown", _private.bindDragEvent)
-			// $(val).each(function(i, v){
-			// 	$(v).attr("draggable", false).unbind("mousedown", _private.bindDragEvent)
-			// })
+			// $(val).attr("draggable", false).unbind("mousedown", _private.bindDragEvent);
+			$(val).each(function(i, v){
+				// $(v).attr("draggable", false).unbind("mousedown", _private.bindDragEvent);
+				v.draggable = true;
+				v.removeEventListener("mousedown", _private.bindDragEvent);
+				v.removeEventListener("touchstart", _private.bindDragEvent);
+			})
 		})
 	}
 
 
-	_private.ctrlControl = function(){
+	_private.ctrlControl = function(e){
+		if($(e.target).hasClass(_private.row_item_class)) return;
 		if(!_private.ifPressedAny(_public.config.keyCode.ctrl)){
 			$("." + _private.rect_class).remove();
 			$("." + _private.line_class).remove();
@@ -618,13 +710,23 @@ function AbsoTool(selector, options) {
 		for (var i = 0; i < _private.radio_func.length; i++) {
 			for (var j = 0; j < _private.radio_func[i].length; j++) {
 				if(_private.ifon(_private.radio_func[i][j])){
-					var f = "_public." + _private.radio_func[i][j];
-					f = eval(f);
-					f(1);
+					_private.callPub(_private.radio_func[i][j], 1);
 					break;
 				}
 			}
-			
+		}
+
+		if(_private.ifon("init")) _private.callPub("init");
+		if(_private.ifon("drawPanel")) _private.callPub("drawPanel");
+	}
+
+	// call public function
+	_private.callPub = function(name){
+		// console.log(arguments)
+		if(_public.hasOwnProperty(name) && typeof(_public[name]) == "function"){
+			var args = Array.prototype.slice.call(arguments);
+			// console.log(arguments)
+			_public[name](...(args.slice(1)));
 		}
 	}
 
@@ -788,47 +890,48 @@ function AbsoTool(selector, options) {
 			if(e.type == "keydown"){
 				_private.key_pressed[e.keyCode] = true;
 
-				_private.hitFunc("init", _public.init);
+				_private.hitFunc("init", true);
 
 				if(_public.selector){
-					_private.hitFunc("stop", _public.stop);
-					_private.hitFunc("printKeyCode", _public.printKeyCode, true);
-					_private.hitFunc("showTips", _public.showTips, true);
+					_private.hitFunc("stop", );
+					_private.hitFunc("printKeyCode", true);
+					_private.hitFunc("showTips", true);
+					_private.hitFunc("drawPanel", true);
 
 					try{
-						_private.hitFunc("adjustWidthHeight", _public.adjustWidthHeight, true);
-						_private.hitFunc("adjustTopLeft", _public.adjustTopLeft, true);
-						_private.hitFunc("adjustZindex", _public.adjustZindex, true);
-						_private.hitFunc("getCurrentTarget", _public.getCurrentTarget);
+						_private.hitFunc("adjustWidthHeight", true);
+						_private.hitFunc("adjustTopLeft", true);
+						_private.hitFunc("adjustZindex", true);
+						_private.hitFunc("getCurrentTarget", );
 					}catch(e){
 						// console.log(e)
 						_private.output("maybe you haven't click a element.")
 					}
 
-					_private.hitFunc("switchStep", _public.switchStep);
+					_private.hitFunc("switchStep", );
 
-					_private.hitFunc("getCss", _public.getCss);
-					_private.hitFunc("getWidthHeight", _public.getWidthHeight);
-					_private.hitFunc("getWidth", _public.getWidth);
-					_private.hitFunc("getHeight", _public.getHeight);
-					_private.hitFunc("getTopLeft", _public.getTopLeft);
-					_private.hitFunc("getLeft", _public.getLeft);
-					_private.hitFunc("getTop", _public.getTop);
-					_private.hitFunc("getZindex", _public.getZindex);
+					_private.hitFunc("getCss", );
+					_private.hitFunc("getWidthHeight", );
+					_private.hitFunc("getWidth", );
+					_private.hitFunc("getHeight", );
+					_private.hitFunc("getTopLeft", );
+					_private.hitFunc("getLeft", );
+					_private.hitFunc("getTop", );
+					_private.hitFunc("getZindex", );
 
-					_private.hitFunc("showDisplayNone", _public.showDisplayNone);
-					_private.hitFunc("hideDisplayNone", _public.hideDisplayNone);
-					_private.hitFunc("addBackgroundColor", _public.addBackgroundColor);
-					_private.hitFunc("removeBackgroundColor", _public.removeBackgroundColor);
+					_private.hitFunc("showDisplayNone", );
+					_private.hitFunc("hideDisplayNone", );
+					_private.hitFunc("addBackgroundColor", );
+					_private.hitFunc("removeBackgroundColor", );
 				}else{
 					// _private.output("please init or addSelector first.")
 				}
 
 
-				_private.hitFunc("setCssRule", _public.setCssRule);
-				_private.hitFunc("setWidthHeight", _public.setWidthHeight);
-				_private.hitFunc("setTopLeft", _public.setTopLeft);
-				_private.hitFunc("setZindex", _public.setZindex);
+				_private.hitFunc("setCss", );
+				_private.hitFunc("setWidthHeight", );
+				_private.hitFunc("setTopLeft", );
+				_private.hitFunc("setZindex", );
 
 
 			}else if(e.type == "keyup"){ 
@@ -845,7 +948,7 @@ function AbsoTool(selector, options) {
 	 * @param  {[type]} e [description]
 	 * @return {[type]}   [description]
 	 */
-	_private.listenAjust = function(e){
+	_private.listenAjust = function(e, code){
 		// console.log(e)
 		if(e){
 			var val;
@@ -853,19 +956,19 @@ function AbsoTool(selector, options) {
 			switch(_private.adjust_css){
 				case "wh":
 					
-					if(_private.ifexist(e.keyCode, _public.config.keyCode.up)){
+					if(_private.ifexist([e.keyCode, code], _public.config.keyCode.up)){
 						//按 上
 						_private.adjustwh("height", false);
 						hit = true;
-					}else if(_private.ifexist(e.keyCode, _public.config.keyCode.down)){
+					}else if(_private.ifexist([e.keyCode, code], _public.config.keyCode.down)){
 						//按 下
 						_private.adjustwh("height", true);
 						hit = true;
-					}else if(_private.ifexist(e.keyCode, _public.config.keyCode.left)){
+					}else if(_private.ifexist([e.keyCode, code], _public.config.keyCode.left)){
 						//按 左
 						_private.adjustwh("width", false);
 						hit = true;
-					}else if(_private.ifexist(e.keyCode, _public.config.keyCode.right)){
+					}else if(_private.ifexist([e.keyCode, code], _public.config.keyCode.right)){
 						//按 右
 						_private.adjustwh("width", true);
 						hit = true;
@@ -875,19 +978,19 @@ function AbsoTool(selector, options) {
 					break;
 				case "tl":
 
-					if(_private.ifexist(e.keyCode, _public.config.keyCode.up)){
+					if(_private.ifexist([e.keyCode, code], _public.config.keyCode.up)){
 						//按 上
 						_private.adjusttl("top", false);
 						hit = true;
-					}else if(_private.ifexist(e.keyCode, _public.config.keyCode.down)){
+					}else if(_private.ifexist([e.keyCode, code], _public.config.keyCode.down)){
 						//按 下
 						_private.adjusttl("top",true);
 						hit = true;
-					}else if(_private.ifexist(e.keyCode, _public.config.keyCode.left)){
+					}else if(_private.ifexist([e.keyCode, code], _public.config.keyCode.left)){
 						//按 左
 						_private.adjusttl("left", false);
 						hit = true;
-					}else if(_private.ifexist(e.keyCode, _public.config.keyCode.right)){
+					}else if(_private.ifexist([e.keyCode, code], _public.config.keyCode.right)){
 						//按 右
 						_private.adjusttl("left", true);
 						hit = true;
@@ -895,11 +998,11 @@ function AbsoTool(selector, options) {
 
 					break;
 				case "z-index":
-					if(_private.ifexist(e.keyCode, _public.config.keyCode.up)){
+					if(_private.ifexist([e.keyCode, code], _public.config.keyCode.up)){
 						//按 上
 						_private.adjustzindex(true);
 						hit = true;
-					}else if(_private.ifexist(e.keyCode, _public.config.keyCode.down)){
+					}else if(_private.ifexist([e.keyCode, code], _public.config.keyCode.down)){
 						//按 下
 						_private.adjustzindex(false);
 						hit = true;
@@ -917,6 +1020,7 @@ function AbsoTool(selector, options) {
 					_private.drawLines(_private.that, 1);
 					_private.drawWhichRect(true)
 					if(_private.ifon("showTips")) _private.drawTips(_private.that);
+					// todo: 有個mouseup hide tips的方法
 				}catch(e){
 					// console.log(e);
 					_private.output("maybe you haven't click a element.");
@@ -934,11 +1038,10 @@ function AbsoTool(selector, options) {
 	/**
 	 * if you press the cheat code or not
 	 * @param  {[type]}   name     function's name
-	 * @param  {Function} callback call it
 	 * @param  {[type]}   sw       if it has a switch
 	 * @return {[type]}            [description]
 	 */
-	_private.hitFunc = function(name, callback, sw){
+	_private.hitFunc = function(name, sw){
 		var num = _public.config.funcKeyCode[name].length;
 		var hit = true;
 		for (var i = 0; i < num; i++) {
@@ -950,9 +1053,10 @@ function AbsoTool(selector, options) {
 
 		if(hit){
 			if(sw){
-				_private.switchFunc(name, callback)
+				_private.switchFunc(name)
 			}else{
-				callback();
+				// callback();
+				_private.callPub(name);
 			}
 			
 		}
@@ -963,26 +1067,30 @@ function AbsoTool(selector, options) {
 	/**
 	 * turn on or off the function
 	 * @param  {[type]}   name     function's name
-	 * @param  {Function} callback call it or me
 	 * @return {[type]}            [description]
 	 */
-	_private.switchFunc = function(name, callback){
+	_private.switchFunc = function(name){
 		var on = true;
-		if(_public.config.funcSwitch[name] == "on"){
-			_public.config.funcSwitch[name] = "off";
+		if(_public.config.funcSwitch[name].toLowerCase() == "on"){
+			// _public.config.funcSwitch[name] = "off";
+			_private.funcOff(name);
 			on = false;
 		}else{
 			var index = _private.ifRadioFunc(name, _private.radio_func);
 			if(index > -1){
 				for (var i = 0; i < _private.radio_func[index].length; i++) {
-					_public.config.funcSwitch[_private.radio_func[index][i]] = "off";
+					// _public.config.funcSwitch[_private.radio_func[index][i]] = "off";
+					_private.funcOff(_private.radio_func[index][i]);
 				}
 			}
-			_public.config.funcSwitch[name] = "on";
+			// _public.config.funcSwitch[name] = "on";
+			_private.funcOn(name);
 		}
 		var str = "function " + name + " is " + _public.config.funcSwitch[name] + " now.";
 		_private.output(str);
-		callback(on);
+		// callback(on);
+		// console.log(name, on )
+		_private.callPub(name, on);
 	}
 
 	/**
@@ -1041,6 +1149,7 @@ function AbsoTool(selector, options) {
 				arr.push(parseFloat(v));
 			})
 		}
+		// console.log(arr)
 		return arr;
 	}
 
@@ -1110,6 +1219,8 @@ function AbsoTool(selector, options) {
 				}
 				break;
 			case _private.ls.css:
+			case _private.ls.cssStr:
+				// 不能這樣，因爲内聯css優先
 				var style = document.createElement("style");
 				style.type = "text/css";
 				try{
@@ -1127,6 +1238,12 @@ function AbsoTool(selector, options) {
 				head.appendChild(style);
 				_private.output('--- add css rules ---');
 				console.log(style);
+
+				break;
+			case _private.ls.cssObj:
+				for(var k in data){
+					$(k).css(data[k])
+				}
 				break;
 			default:
 				break;
@@ -1150,7 +1267,7 @@ function AbsoTool(selector, options) {
 		var outerWidth = $(that).outerWidth(false);
 		var outerHeight = $(that).outerHeight(false);
 		if($("#" + id).length < 1){
-			$("body").append('<div id="' + id + '" class="' + cls + '"></div>');
+			$(_private.self_container).append('<div id="' + id + '" class="' + cls + '"></div>');
 
 		}
 
@@ -1180,7 +1297,7 @@ function AbsoTool(selector, options) {
 		if($("." + _private.line_class).length < 4){
 			var i = 0;
 			do {
-				$("body").append('<div id="' + _private.line_class + '-' + i + '" class="' + _private.line_class + '"></div>');
+				$(_private.self_container).append('<div id="' + _private.line_class + '-' + i + '" class="' + _private.line_class + '"></div>');
 				i++;
 			} while (i < 4)
 		}
@@ -1310,7 +1427,6 @@ function AbsoTool(selector, options) {
 
 	// ------------------- tips --------------------------------
 	_private.drawTips = function(that){
-
 		var offset = $(that).offset();
 		var outerWidth = $(that).outerWidth(false);
 		var outerHeight = $(that).outerHeight(false);
@@ -1323,7 +1439,7 @@ function AbsoTool(selector, options) {
 		var ele1 = '<div id="' + id1 + '" class="' + _private.tips_class+ '"></div>';
 		var ele2 = '<div id="' + id2 + '" class="' + _private.tips_class+ '"></div>';
 		var ele3 = '<div id="' + id3 + '" class="' + _private.tips_class+ '"></div>';
-		$("body").append(ele1).append(ele2).append(ele3);
+		$(_private.self_container).append(ele1).append(ele2).append(ele3);
 
 		var arr1 = [
 			parseFloat(offset.top - (_private.container_cy + _private.margin[0])),
@@ -1458,10 +1574,11 @@ function AbsoTool(selector, options) {
 	// --------------------- drag -------------------------------------------
 	_private.bindDragEvent = function(e){
 		// console.log(e)
-		e.preventDefault();
+		// e.preventDefault();
 		var type = e.type;
 		switch(type){
 			case "mousedown":
+			case "touchstart":
 				_private.that = this;
 				// _private.container = $(this).parent();
 				_private.container = $(this).offsetParent();
@@ -1477,10 +1594,12 @@ function AbsoTool(selector, options) {
 				}
 				_private.dragstart(e);
 				break;
+			case "touchmove":
 			case "mousemove":
 				_private.dragmove(e);
 				break;
 			case "mouseup":
+			case "touchend":
 				_private.dragend(e);
 				break;
 		}
@@ -1488,20 +1607,35 @@ function AbsoTool(selector, options) {
 
 	_private.setBindMoveEnd = function(isset){
 		if(isset){
-			$(document).bind("mousemove", _private.bindDragEvent);
-			$(document).bind("mouseup", _private.bindDragEvent);
+			if(_private.sys == _private._window){
+				document.addEventListener("mousemove", _private.bindDragEvent);
+				document.addEventListener("mouseup", _private.bindDragEvent);
+			}else{
+				document.addEventListener("touchmove", _private.bindDragEvent, {passive: false, capture: false});
+				document.addEventListener("touchend", _private.bindDragEvent, {passive: false, capture: false});
+			}
+
 		}else{
-			$(document).unbind("mousemove");
-			$(document).unbind("mouseup");
+			if(_private.sys == _private._window){
+				document.removeEventListener("mousemove", _private.bindDragEvent);
+				document.removeEventListener("mouseup", _private.bindDragEvent);
+			}else{
+				document.removeEventListener("touchmove", _private.bindDragEvent);
+				document.removeEventListener("touchend", _private.bindDragEvent);
+			}
 		}
 	}
 
 	_private.dragstart = function(e){
+		try{
+			var x = e.originalEvent.pageX || e.originalEvent.touches[0].pageX;
+			var y = e.originalEvent.pageY || e.originalEvent.touches[0].pageY;
+		}catch(err){
+			var x = e.pageX || e.touches[0].pageX;
+			var y = e.pageY || e.touches[0].pageY;
+		}
 
 		var offset = $(_private.that).offset()
-		var x = e.originalEvent.pageX;
-		var y = e.originalEvent.pageY;
-
 		_private.w = $(_private.that).innerWidth();
 		_private.h = $(_private.that).innerHeight();
 
@@ -1512,7 +1646,7 @@ function AbsoTool(selector, options) {
 		_private.container_position = _private.container.css("position");
 		// _private.container_margin = _private.getmp(_private.container, "margin");
 		switch(_private.container_position){
-			// 相对时，拿样式的时候要减去container_cx和container_cy
+			// 相對時，拿樣式的時候要減去container_cx和container_cy
 			case "relative":
 				_private.container_cx = _private.container_offset.left;
 				_private.container_cy = _private.container_offset.top;
@@ -1534,7 +1668,7 @@ function AbsoTool(selector, options) {
 				_private.container_cy = 0;
 				break;
 		}
-		// parent border好像也有影响
+		// parent border好像也有影響
 		_private.container_cy += parseFloat($(_private.container).css("border-top"));
 		_private.container_cx += parseFloat($(_private.container).css("border-left"));
 		// console.log(_private.container_position)
@@ -1559,8 +1693,14 @@ function AbsoTool(selector, options) {
 	}
 
 	_private.dragmove = function(e){
-		var x = e.originalEvent.pageX;
-		var y = e.originalEvent.pageY;
+		try{
+			var x = e.originalEvent.pageX || e.originalEvent.touches[0].pageX;
+			var y = e.originalEvent.pageY || e.originalEvent.touches[0].pageY;
+		}catch(err){
+			var x = e.pageX || e.touches[0].pageX;
+			var y = e.pageY || e.touches[0].pageY;
+		}
+
 
 		if(_public.options.boundary){
 			var pos = _private.get_mousemove_position(y - (_private.cy + _private.margin[0] + _private.container_cy), x - (_private.cx + _private.margin[3] + _private.container_cx));
@@ -1582,8 +1722,9 @@ function AbsoTool(selector, options) {
 	}
 
 	_private.dragend = function(e){
-		var x = e.originalEvent.pageX;
-		var y = e.originalEvent.pageY;
+		// console.log(e)
+		// var x = e.originalEvent.pageX || e.originalEvent.touches[0].pageX;
+		// var y = e.originalEvent.pageY || e.originalEvent.touches[0].pageY;
 
 		$("#" + _private.id).remove();
 		$("." + _private.line_class).remove();
@@ -1594,6 +1735,7 @@ function AbsoTool(selector, options) {
 		}
 
 		_private.setBindMoveEnd(false);
+		console.log("dragend")
 	}
 	// --------------------- drag end-------------------------------------------
 	//
@@ -1635,7 +1777,7 @@ function AbsoTool(selector, options) {
 	 * @return {[type]}      [description]
 	 */
 	_private.ifon = function(name){
-		return _public.config.funcSwitch[name] == "on";
+		return _public.config.funcSwitch[name].toLowerCase() == "on";
 	}
 
 	/**
@@ -1644,10 +1786,21 @@ function AbsoTool(selector, options) {
 	 * @param  {[type]} code_arr [description]
 	 * @return {[type]}          [description]
 	 */
-	_private.ifexist = function(code,  code_arr){
-		for (var i = 0; i < code_arr.length; i++) {
-			if(code_arr[i] == code){
-				return true;
+	// _private.ifexist = function(code,  code_arr){
+	// 	for (var i = 0; i < code_arr.length; i++) {
+	// 		if(code_arr[i] == code){
+	// 			return true;
+	// 		}
+	// 	}
+	// 	return false;
+	// }
+
+	_private.ifexist = function(codes,  code_arr){
+		for (var i = 0; i < codes.length; i++) {
+			for (var j = 0; j < code_arr.length; j++) {
+				if(codes[i] == code_arr[j]){
+					return true;
+				}
 			}
 		}
 		return false;
@@ -1824,7 +1977,6 @@ function AbsoTool(selector, options) {
 	}
 
 
-
 	/**
 	 * copy data into clipboard base on type
 	 * @param  {[type]} data [description]
@@ -1843,6 +1995,9 @@ function AbsoTool(selector, options) {
 				for(var key in data){
 					text += key.substr(1) + " = " + JSON.stringify(data[key]) + ";\n";
 				}
+				break;
+			default:
+				text = data;
 				break;
 		}
 		var textarea = document.createElement("textarea");
@@ -1874,8 +2029,382 @@ function AbsoTool(selector, options) {
 	_private.get_boder_width = function(border){
 
 	}
+
+	_private.getSystem = function() {
+	  var userAgent = window.navigator.userAgent;
+	  if (userAgent.toLowerCase().indexOf("window") != -1) {
+	    return _private._window;
+	  } else if (userAgent.toLowerCase().indexOf("ipad") != -1) {
+	    return _private._ios;
+	  } else if (userAgent.toLowerCase().indexOf("iphone") != -1) {
+	    return _private._ios;
+	  } else if (userAgent.toLowerCase().indexOf("mac os") != -1) {
+	    return _private._window;
+	  } else if (userAgent.toLowerCase().indexOf("android") != -1) {
+	    return _private._android;
+	  } else if (userAgent.toLowerCase().indexOf("linux") != -1) {
+	    return _private._android;
+	  }
+	};
 	// ----------------- operation end --------------------------------------
 	
+
+	// ----------------- new func--------------------
+	_public.drawPanel = function(){
+		var that = this;
+		var html = `
+			<div id="${_private.panel_class}" class="${_private.panel_class}">
+
+				<div id="${_private.panel_class}-icon" class="${_private.row_item_class} ${_private.panel_class}-icon" data-type="restore">absotool</div>
+				<div class="${_private.panel_class}-body">
+					<div class="${_private.row_class}">
+						<div class="${_private.row_item_class}" data-type="fun" data-fun="init">開始</div>
+						<div class="${_private.row_item_class}" data-type="fun" data-fun="setCss">復位</div>
+						<div class="${_private.row_item_class}" data-type="min">-</div>
+					</div>
+					<div class="${_private.row_class}">
+						<div class="${_private.row_item_class}" data-type="fun" data-fun="adjustWidthHeight">大小</div>
+						<div class="${_private.row_item_class}" data-type="fun" data-fun="adjustTopLeft">位置</div>
+						<div class="${_private.row_item_class}" data-type="fun" data-fun="adjustZindex">z-index</div>
+					</div>
+					<div class="${_private.row_class}">
+						<div class="${_private.row_item_class}" data-type="fun" data-fun="showTips">tips</div>
+						<div class="${_private.row_item_class}" data-type="code" data-code="87">W</div>
+						<div class="${_private.row_item_class}" data-type="fun" data-fun="getCss">css</div>
+					</div>
+					<div class="${_private.row_class}">
+						<div class="${_private.row_item_class}" data-type="code" data-code="65">A</div>
+						<div class="${_private.row_item_class}" data-type="code" data-code="83">S</div>
+						<div class="${_private.row_item_class}" data-type="code" data-code="68">D</div>
+					</div>
+					<div class="${_private.row_class}">
+						<div class="${_private.row_item_class}" data-type="step" style="width: 101px; cursor:auto; ">step: ${_public.options.step}</div>
+						<div class="${_private.row_item_class}" data-type="fun" data-fun="switchStep">switch</div>
+					</div>
+				</div>
+			</div>
+		`;
+		if($("#"+_private.panel_class).length == 0){
+			$(_private.self_container).append(html);
+
+			// todo: 把click拆開mousedown, mouseup
+			var btns = document.querySelectorAll(`#${_private.panel_class} .${_private.row_item_class}`);
+			if(_private.sys == _private._window){
+				for(var btn of btns){
+					btn.addEventListener("mousedown", _private.clickPanelBtn);
+					btn.addEventListener("mousemove", _private.clickPanelBtn);
+					btn.addEventListener("mouseup", _private.clickPanelBtn);
+				}
+			}else{
+				for(var btn of btns){
+					btn.addEventListener("touchstart", _private.clickPanelBtn, {passive: false, capture: false});
+					btn.addEventListener("touchmove", _private.clickPanelBtn, {passive: false, capture: false});
+					btn.addEventListener("touchend", _private.clickPanelBtn, {passive: false, capture: false});
+				}
+			}
+			_private.panel = document.querySelector("#"+_private.panel_class);
+			_private.updatePanel();	
+
+			if(!_private.loadedCss){
+				_private.addPanelCss();
+			}else{
+				_private.setPanelPos(_private.plx, _private.ply);
+			}
+		} 
+
+	}
+
+	_private.clickPanelBtn = function(e){
+		var target = e.target;
+		var btn = $(e.target);
+		var type = $(btn).data("type");
+		var fun = $(btn).data("fun");
+
+		switch(e.type){
+			case "mousedown":
+			case "touchstart":
+				if(type == "code"){
+					_private.btn_pressed = $(btn).data("code");
+					setTimeout(_private.pressBtn, 500);
+					$(btn).addClass(_private.fun_on_class);
+				}else if(type == "restore"){
+					_private.ply = _private.panel.offsetTop;
+					_private.plx = _private.panel.offsetLeft;
+					_private.panelMove(e, btn);
+				}else if(fun == "getCss" || fun == "switchStep" || fun == "setCss"){
+					$(btn).addClass(_private.fun_on_class);
+				}
+				_private.btn_that = target;
+				break;
+			case "mousemove":
+			case "touchmove":
+				if(type == "restore"){
+					// _private.panelMove(e, btn);
+				}else if(_private.btn_that != target && _private.btn_pressed){
+					$(_private.btn_that).removeClass(_private.fun_on_class);
+					_private.btn_pressed = null;
+				}
+
+				break;
+			case "mouseup":
+			case "touchend":
+				if(_private.btn_that != target) return;
+				if(type == "fun"){
+					if(fun == "init"){
+						if(_private.ifon("init")){
+							_public.stop();
+						}else{
+							_private.switchFunc("init");
+							// $(`.${_private.panel_class}-icon`).addClass(_private.fun_on_class);
+						}
+					}
+					else if(fun == "adjustTopLeft"){
+						_private.switchFunc("adjustTopLeft");
+					}else if(fun == "adjustWidthHeight"){
+						_private.switchFunc("adjustWidthHeight");
+					}else if(fun == "adjustZindex"){
+						_private.switchFunc("adjustZindex");
+					}else if(fun == "showTips"){
+						_private.switchFunc("showTips");
+					}else if(fun == "getCss"){
+						_public.getCss();
+						$(btn).removeClass(_private.fun_on_class);
+					}else if(fun == "switchStep"){
+						_public.switchStep();
+						$(btn).removeClass(_private.fun_on_class);
+					}else if(fun == "setCss"){
+						_public.setCss();
+						$(btn).removeClass(_private.fun_on_class);
+					}
+				}else if(type == "code"){
+					_private.listenAjust({keyCode: _private.btn_pressed});
+					_private.btn_pressed = null;
+					$(btn).removeClass(_private.fun_on_class);
+				}else if(type == "min"){
+					_private.miniPanel()
+				}else if(type == "restore"){
+					var end_time = new Date().getTime();
+					if(end_time - _private.btn_pressed_time > 200){
+						_private.panelMove(e, btn);
+					}else{
+						_private.restorePanel();
+					}
+
+				}else if(type == "drag"){
+
+				}
+				break;
+		}
+	}
+
+	_private.panelMove = function(e, btn){
+		switch(e.type){
+			case "mousedown":
+			case "touchstart":
+				_private.btn_pressed_time = new Date().getTime();
+				try{
+					var x = e.originalEvent.clientX || e.originalEvent.touches[0].clientX;
+					var y = e.originalEvent.clientY || e.originalEvent.touches[0].clientY;
+				}catch(err){
+					var x = e.clientX || e.touches[0].clientX;
+					var y = e.clientY || e.touches[0].clientY;
+				}
+
+				// var offset = $(_private.panel).offset();
+
+				_private.pcy = y - _private.panel.offsetTop;
+				_private.pcx = x - _private.panel.offsetLeft;
+
+				_private.setPanelMoveEnd(true);
+				break;
+			case "mousemove":
+			case "touchmove":
+				try{
+					var x = e.originalEvent.clientX || e.originalEvent.touches[0].clientX;
+					var y = e.originalEvent.clientY || e.originalEvent.touches[0].clientY;
+				}catch(err){
+					var x = e.clientX || e.touches[0].clientX;
+					var y = e.clientY || e.touches[0].clientY;
+				}
+				// var offset = $(_private.panel).offset();
+				var py = y - _private.pcy;
+				var px = x - _private.pcx;
+
+				_private.setPanelPos(px, py);
+				// console.log(y, x, offset.top, offset.left, _private.pcy, _private.pcx)
+				break;
+			case "mouseup":
+			case "touchend":
+
+				_private.setPanelMoveEnd(false);
+				break;
+		}
+	}
+
+	// 防止出界
+	_private.setPanelPos = function(x, y){
+		y = Math.max(_private.pm, y);
+		x = Math.max(_private.pm, x);
+		y = Math.min($(window).height() - $(_private.panel).outerHeight() - _private.pm, y);
+		x = Math.min($(window).width() - $(_private.panel).outerWidth() - _private.pm, x);
+		$(_private.panel).css({
+			top: y,
+			left: x,
+		})
+	}
+
+	_private.miniPanel = function(){
+		$(_private.panel).find(`.${_private.panel_class}-body`).hide();
+		$(_private.panel).find(`#${_private.panel_class}-icon`).show();
+		// console.log($(_private.panel).find(`#${_private.panel_class}-icon`))
+		$(_private.panel).css({
+			top: _private.ply,
+			left: _private.plx,
+		})
+	}
+
+	_private.restorePanel = function(){
+		$(_private.panel).find(`.${_private.panel_class}-body`).show();
+		$(_private.panel).find(`#${_private.panel_class}-icon`).hide();
+		_private.setPanelPos(_private.panel.offsetLeft, _private.panel.offsetTop);
+	}
+
+	_private.setPanelMoveEnd = function(isset){
+		if(isset){
+			if(_private.sys == _private._window){
+				document.addEventListener("mousemove", _private.panelMove);
+				document.addEventListener("mouseup", _private.panelMove);
+			}else{
+				document.addEventListener("touchmove", _private.panelMove, {passive: false, capture: false});
+				document.addEventListener("touchend", _private.panelMove, {passive: false, capture: false});
+			}
+
+		}else{
+			if(_private.sys == _private._window){
+				document.removeEventListener("mousemove", _private.panelMove);
+				document.removeEventListener("mouseup", _private.panelMove);
+			}else{
+				document.removeEventListener("touchmove", _private.panelMove);
+				document.removeEventListener("touchend", _private.panelMove);
+			}
+		}
+	}
+
+	// 模擬keydown一直觸發
+	_private.pressBtn = function(){
+		if(_private.btn_pressed != null){
+			_private.listenAjust({keyCode: _private.btn_pressed});
+			setTimeout(_private.pressBtn, 50);
+		}
+	}
+
+	_private.addPanelCss = function(){
+		var style = document.createElement("style");
+		style.type = "text/css";
+
+		var text = `
+			#${_private.container_class}{
+				/*position: absolute;*/
+			}
+			.${_private.panel_class} {
+				min-width: 50px;
+				position: fixed;
+				border-top: 1px solid #000000;
+				border-left: 1px solid #000000;
+			}
+			.${_private.panel_class}-body {
+				display: none;
+			}
+			.${_private.panel_class} .${_private.row_class} {
+				display: flex;
+				/*flex-wrap: wrap;*/
+			}
+			.${_private.panel_class} .${_private.row_class} .${_private.row_item_class} {
+				width: 50px;
+				height: 50px;
+				text-align: center;
+				line-height: 50px;
+				border-right: 1px solid #000000;
+				border-bottom: 1px solid #000000;
+				cursor: pointer;
+				background-color: #ffffff;
+				color: #000000;
+				user-select: none;
+			}
+			#${_private.panel_class}-icon {
+				padding: 5px;
+				border-right: 1px solid #000000;
+				border-bottom: 1px solid #000000;
+				cursor: pointer;
+				user-select: none;
+			}
+			.${_private.fun_on_class} {
+				background-color: red !important;
+				color: white;
+			}
+
+			
+
+			/* test */
+			#bg {
+				transform: scale(1);
+			}
+		`;
+
+		try{
+			style.appendChild(document.createTextNode(text));
+		}catch(e){
+			style.styleSheet.cssText = text;
+		}
+
+		var head = document.getElementsByTagName("head")[0];
+		if(!_private.loadedCss) head.appendChild(style);
+		style.onload = function(){
+			_private.setPanelPos(_private.plx, _private.ply);
+			_private.loadedCss = true;
+		}
+	}
+
+	_private.updatePanel = function(){
+		if(!_private.ifon("drawPanel")) return;
+		for(var key in _public.config.funcSwitch){
+			if(_public.config.funcSwitch[key].toLowerCase() == "on"){
+				$(`.${_private.row_item_class}[data-fun=${key}]`).addClass(_private.fun_on_class);
+				if(key == "init"){
+					$(`.${_private.row_item_class}[data-fun=init]`).text("停止");
+					$(`#${_private.panel_class} .${_private.panel_class}-icon`).addClass(_private.fun_on_class);
+				}
+				
+			}else{
+				$(`.${_private.row_item_class}[data-fun=${key}]`).removeClass(_private.fun_on_class);
+				if(key == "init"){
+					$(`.${_private.row_item_class}[data-fun=init]`).text("開始");
+					$(`#${_private.panel_class} .${_private.panel_class}-icon`).removeClass(_private.fun_on_class);
+				}
+			}
+		}
+
+		$(`.${_private.row_item_class}[data-type=step]`).text(`step: ${_public.options.step}`)
+	}
+
+	_private.initContainer = function(){
+		// _private.self_container = `<div id="${_private.container_class}" class="${_private.container_class}"></div>`;
+		if(_private.self_container) return;
+		_private.self_container = document.createElement("div");
+		_private.self_container.id = _private.container_class;
+		_private.self_container.className = _private.container_class;
+		document.body.appendChild(_private.self_container);
+	}
+
+	_private.funcOn = function(name){
+		if(_public.config.funcSwitch.hasOwnProperty(name)) _public.config.funcSwitch[name] = "on";
+	}
+
+	_private.funcOff = function(name){
+		if(_public.config.funcSwitch.hasOwnProperty(name)) _public.config.funcSwitch[name] = "off";
+	}
+	// ----------------- new func end--------------------
+
 	return _public;
 
 }
